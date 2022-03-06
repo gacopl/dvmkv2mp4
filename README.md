@@ -14,9 +14,12 @@ sudo apt-get update
 sudo apt-get install gpac ffmpeg 
 wget https://github.com/quietvoid/dovi_tool/releases/download/1.4.6/dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
 tar -zxf dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
-mv dist/dovi_tool /usr/local/bin/```
+mv dist/dovi_tool /usr/local/bin/
+```
 
 #Installation
 Download dvmkv2mp4
+```
 chmod a+x dvmkv2mp4
 mv dvmkmc2mp4 /usr/local/bin
+```
