@@ -8,13 +8,14 @@ Feuatures:
 - keeps chapters
 - converts PGS subtitiles found to SRT subtitiles with PGSToSRT
 - creates backup mkv with .asm extension (audio subs meta) that has the original audio (truehd etc) subtitles tracks, chapters but without video to safekeep for future comeback conversions to original mkv and not waste place as you can easily demux the mp4 video and mux it with that mkv to come back to original
-- keeps only POL and ENG audio and subtittles (you can change langs in code)
+- keeps only UND, POL and ENG audio and subtittles (you can change langs in code LINE 26 and 32)
 
 # Requirements
 - ffmpeg 4.4
 - mp4box 1.0.1 - it's important to use this version for mp4 converts work on LG C8
 - dovi_tool
 - docker for PGS2SRT conversion
+- 3xSize of free space for file you want to convert
 
 # Requirements install on Ubuntu 20.04
 `sudo add-apt-repository ppa:savoury1/ffmpeg4
@@ -35,4 +36,8 @@ chmod a+x dvmkv2mp4
 mv dvmkmc2mp4 /usr/local/bin
 ```
 # Usage
-In directory containing Dolby Vision mkv simply run `dvmkv2mp4`it will process any 
+In directory containing Dolby Vision mkv simply run `dvmkv2mp4`it will process any mkvs found in that dir
+
+# Roadmap
+- parameters for langs, input removal behaviour, audio-subs-meta creation
+- docker version
