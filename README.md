@@ -4,7 +4,7 @@ Beta release, converts any Dolby Vision mkv (Profile 4, 5 , 7 Single Track, 7 Du
 
 Feuatures:
 - converting from any 4,5,7,8 DV profile to mp4
-- converts any truehd, dts etc to high bitrate Dolby Digital Plus
+- converts any truehd, dts etc to high bitrate Dolby Digital Plus, copies without conversion supported tracks like ac3, eac3
 - keeps chapters
 - converts PGS subtitiles found to SRT subtitiles with PGSToSRT
 - creates backup mkv with .asm extension (audio subs meta) that has the original audio (truehd etc) subtitles tracks, chapters but without video to safekeep for future comeback conversions to original mkv and not waste place as you can easily demux the mp4 video and mux it with that mkv to come back to original
