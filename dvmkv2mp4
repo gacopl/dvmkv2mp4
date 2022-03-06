@@ -67,6 +67,14 @@ for f in *.mkv;do
       ffopts="-map 0:$id -c:a:0 copy $id.$lang.ac3"
       echo "$id.$lang.ac3|ac3|$id|$codec|$lang|$title" >> audio.exports
     fi
+    if [ "$codec" == "aac" ]; then
+      ffopts="-map 0:$id -c:a:0 copy $id.$lang.aac"
+      echo "$id.$lang.aac|aac|$id|$codec|$lang|$title" >> audio.exports
+    fi
+    if [ "$codec" == "mp3" ]; then
+      ffopts="-map 0:$id -c:a:0 copy $id.$lang.mp3"
+      echo "$id.$lang.mp3|mp3|$id|$codec|$lang|$title" >> audio.exports
+    fi
     if [ "$codec" == "ass" ]; then
       ffopts="-map 0:$id -c:s:0 copy \"$output.${lang}${id}.ass\" -map 0:$id -c:s:0 srt \"$output.${lang}${id}.srt\""
       echo "$output.${lang}${id}.ass|$id|ass|$codec|$lang|$title" >> sub.exports
