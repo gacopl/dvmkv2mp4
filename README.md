@@ -29,6 +29,7 @@ mv dist/dovi_tool /usr/local/bin/
 
 # Configuration
 By default it keeps only undefined, english and polish audio and subtitiles tracks, you can change this by changing line 26 and 32 in the bash code
+
 By default it removes input to save space after demuxing, be careful or change behaviour in code by commenting out lines 101 and 136
 
 # Installation
