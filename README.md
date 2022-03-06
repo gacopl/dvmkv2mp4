@@ -38,7 +38,7 @@ Download dvmkv2mp4 make it executable and move
 ```
 wget https://raw.githubusercontent.com/gacopl/dvmkv2mp4/main/dvmkv2mp4
 chmod a+x dvmkv2mp4
-mv dvmkmc2mp4 /usr/local/bin
+mv dvmkv2mp4 /usr/local/bin/
 ```
 # Usage
 In directory containing Dolby Vision mkv simply run `dvmkv2mp4`it will process any mkvs found in that dir
