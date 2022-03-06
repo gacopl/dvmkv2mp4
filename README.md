@@ -7,6 +7,7 @@ Feuatures:
 - converts any truehd, dts etc to high bitrate Dolby Digital Plus, copies without conversion supported tracks like ac3, eac3
 - keeps chapters
 - converts PGS subtitiles found to SRT subtitiles with PGSToSRT
+- extracts all SRT tracks to SRT files
 - creates backup mkv with .asm extension (audio subs meta) that has the original audio (truehd etc) subtitles tracks, chapters but without video to safekeep for future comeback conversions to original mkv and not waste place as you can easily demux the mp4 video and mux it with that mkv to come back to original
 - keeps only UND, POL and ENG audio and subtittles (you can change langs in code LINE 26 and 32)
 
