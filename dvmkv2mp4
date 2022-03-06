@@ -11,7 +11,7 @@ for f in *.mkv;do
   ffend7_2="| dovi_tool -m 2 extract-rpu - -o RPU.bin; dovi_tool inject-rpu -i BL.hevc --rpu-in RPU.bin -o BL_RPU.hevc; rm BL.hevc RPU.bin"
   
   dv_profile=$(mediainfo "$input" | grep "HDR format.*dvhe\." | sed 's/.*dvhe\.0\(.\).*/\1/')
-  if [ -z "$dv_profile" ] || [ -f "${input}.dvconverting"]; then
+  if [ -z "$dv_profile" ] || [ -f "${input}.dvconverting" ]; then
     return 0
   fi
   if { [ "$dv_profile" -ne 4 ] && [ "$dv_profile" -ne 5 ] && [ "$dv_profile" -ne 7 ] && [ "$dv_profile" -ne 8 ]; } ; then
