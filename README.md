@@ -3,10 +3,10 @@
 Beta release, converts any Dolby Vision mkv to mp4 compatible with LG OLEDs, tested with emby
 
 # Requirements
-ffmpeg 4.4
-mp4box 1.0.1 - it's important to use this version for mp4 converts work on LG C8
-dovi_tool
-docker for PGS2SRT conversion
+- ffmpeg 4.4
+- mp4box 1.0.1 - it's important to use this version for mp4 converts work on LG C8
+- dovi_tool
+- docker for PGS2SRT conversion
 
 # Requirements install on Ubuntu 20.04
 ```sudo add-apt-repository ppa:savoury1/ffmpeg4
