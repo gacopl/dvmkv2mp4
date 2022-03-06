@@ -17,7 +17,7 @@ tar -zxf dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
 mv dist/dovi_tool /usr/local/bin/
 ```
 
-#Installation
+# Installation
 Download dvmkv2mp4
 ```
 chmod a+x dvmkv2mp4
