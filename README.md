@@ -32,8 +32,9 @@ By default it keeps only undefined, english and polish audio and subtitiles trac
 By default it removes input to save space after demuxing, be careful or change behaviour in code by commenting out lines 101 and 136
 
 # Installation
-Download dvmkv2mp4
+Download dvmkv2mp4 make it executable and move
 ```
+wget https://raw.githubusercontent.com/gacopl/dvmkv2mp4/main/dvmkv2mp4
 chmod a+x dvmkv2mp4
 mv dvmkmc2mp4 /usr/local/bin
 ```
