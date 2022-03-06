@@ -15,14 +15,15 @@ Feuatures:
 - ffmpeg 4.4
 - mp4box 1.0.1 - it's important to use this version for mp4 converts work on LG C8
 - dovi_tool
+- mediainfo v21
 - docker for PGS2SRT conversion
 - 3xSize of free space for file you want to convert
 
 # Requirements install on Ubuntu 20.04
 ```
 sudo add-apt-repository ppa:savoury1/ffmpeg4
-sudo apt-get update
-sudo apt-get install gpac ffmpeg 
+wget https://mediaarea.net/repo/deb/repo-mediaarea_1.0-19_all.deb && dpkg -i repo-mediaarea_1.0-19_all.deb && apt-get update
+sudo apt-get install gpac ffmpeg mediainfo
 wget https://github.com/quietvoid/dovi_tool/releases/download/1.4.6/dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
 tar -zxf dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
 mv dist/dovi_tool /usr/local/bin/
