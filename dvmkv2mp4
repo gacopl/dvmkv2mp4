@@ -100,7 +100,7 @@ for f in *.mkv;do
   eval ${ffstring[*]}
   >| "$input"
   mkvextract chapters -s "${input%.mkv}.asm" > chapters.list
-  mp4string=("mp4box-old -add BL_RPU.hevc:dv-profile=$dv_target")
+  mp4string=("MP4Box -add BL_RPU.hevc:dv-profile=$dv_target")
   tcount=2
   while read i;do
     stream=`echo "$i" | cut -f1 -d\|`
