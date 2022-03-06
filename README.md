@@ -18,7 +18,8 @@ Feuatures:
 - 3xSize of free space for file you want to convert
 
 # Requirements install on Ubuntu 20.04
-```sudo add-apt-repository ppa:savoury1/ffmpeg4
+```
+sudo add-apt-repository ppa:savoury1/ffmpeg4
 sudo apt-get update
 sudo apt-get install gpac ffmpeg 
 wget https://github.com/quietvoid/dovi_tool/releases/download/1.4.6/dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
