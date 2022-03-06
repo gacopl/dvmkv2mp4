@@ -45,3 +45,4 @@ In directory containing Dolby Vision mkv simply run `dvmkv2mp4`it will process a
 # Roadmap
 - parameters for langs, input removal behaviour, audio-subs-meta creation
 - docker version
+- convert directly from Bluray bdmv mpls file (have it working in alpha state already)
