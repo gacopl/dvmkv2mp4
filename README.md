@@ -1,4 +1,4 @@
-# dvmkv2mp4
+# dvmkv2mp4 - Convert any Dolby Vision profile MKV to MP4 that runs on many devices
 
 Beta release, converts any Dolby Vision mkv (Profile 4, 5 , 7 Single Track, 7 Dual Track, 8) to mp4 (DV4, DV5, DV8) compatible with LG OLEDs, tested with Emby on LG 77CX, 48CX, 65C8
 
