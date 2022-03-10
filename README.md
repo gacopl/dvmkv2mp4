@@ -22,11 +22,11 @@ Feuatures:
 # Requirements install on Ubuntu 20.04
 ```
 sudo add-apt-repository ppa:savoury1/ffmpeg4
-wget https://mediaarea.net/repo/deb/repo-mediaarea_1.0-19_all.deb && dpkg -i repo-mediaarea_1.0-19_all.deb && apt-get update
+wget https://mediaarea.net/repo/deb/repo-mediaarea_1.0-19_all.deb && sudo dpkg -i repo-mediaarea_1.0-19_all.deb && sudo apt-get update
 sudo apt-get install gpac ffmpeg mediainfo
 wget https://github.com/quietvoid/dovi_tool/releases/download/1.4.6/dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
 tar -zxf dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
-mv dist/dovi_tool /usr/local/bin/
+sudo mv dist/dovi_tool /usr/local/bin/
 ```
 
 # Configuration
