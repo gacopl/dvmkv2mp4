@@ -25,10 +25,19 @@ sudo add-apt-repository ppa:savoury1/ffmpeg4
 sudo wget -O /usr/share/keyrings/gpg-pub-moritzbunkus.gpg https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
 echo "deb [arch=amd64 signed-by=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ focal main" | sudo tee -a /etc/apt/sources.list
 wget https://mediaarea.net/repo/deb/repo-mediaarea_1.0-19_all.deb && sudo dpkg -i repo-mediaarea_1.0-19_all.deb && sudo apt-get update
-sudo apt-get install gpac ffmpeg mediainfo mkvtoolnix
+sudo apt-get install ffmpeg mediainfo mkvtoolnix
 wget https://github.com/quietvoid/dovi_tool/releases/download/1.4.6/dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
 tar -zxf dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
 sudo mv dist/dovi_tool /usr/local/bin/
+sudo apt-get install build-essential pkg-config git
+sudo apt-get install zlib1g-dev
+git clone https://github.com/gpac/gpac.git gpac_public
+cd gpac_public
+git checkout v1.0.1 
+./configure --static-bin
+make
+make install
+MP4Box -version # MAKE SURE IT SAYS 1.0.1
 ```
 
 # Configuration
