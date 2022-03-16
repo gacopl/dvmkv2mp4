@@ -58,5 +58,6 @@ In directory containing Dolby Vision mkv simply run `dvmkv2mp4`it will process a
 # Roadmap
 - HDR10+ to DV8 conversion
 - parameters for langs, input removal behaviour, audio-subs-meta creation
-- docker version
+- helper scripts for Radarr, Sonarr to automatically run on import
 - convert directly from Bluray bdmv mpls file (have it working in alpha state already)
+- docker version
