@@ -13,7 +13,7 @@ Feuatures:
 
 # Requirements
 - ffmpeg 4.4
-- mp4box 1.0.1 - it's important to use this version for mp4 converts work on LG C8
+- **mp4box 1.0.1 - it's important to use this version otherwise script will fail
 - dovi_tool
 - mediainfo v21
 - docker for PGS2SRT conversion
