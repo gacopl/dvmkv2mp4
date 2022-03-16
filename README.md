@@ -36,7 +36,7 @@ cd gpac_public
 git checkout v1.0.1 
 ./configure --static-bin
 make
-make install
+sudo make install
 MP4Box -version # MAKE SURE IT SAYS 1.0.1
 ```
 
