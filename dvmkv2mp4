@@ -72,7 +72,7 @@ function processsubs {
         eval "cp \"$i\" \"`echo "$i" | sed 's/\ DV\.\|\ HDR10+\.\|HDR\./\./g' | sed 's/\.\(.*\)\.srt/\ DV-MP4\.\1\.srt/g'`\"";
     done
     # CONVERT PGS 2 SRT
-    if [ -s "sub.exports" ]; then
+    if [ -s "sub.exports" ] && [ "$(cat sub.exports | grep hdmv_pgs)" != "" ]; then
       while read i;do
         stream=`echo "$i" | cut -f1 -d\|`
         lang=`echo "$i" | cut -f5 -d\|`
