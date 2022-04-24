@@ -139,15 +139,28 @@ for f in *.mkv;do
       MaxDML=${MaxDML%.*}
       MinDML=`mediainfo "$input" | grep 'Mastering display luminance' | cut -f 3 -d:`
       MinDML=${MinDML% cd*}
-      if [ "$MinDML" == "0.0050" ]; then 
+      if [ "$MinDML" == " 0.0050" ]; then 
         MinDML=50 
-      elif [ "$MinDML" == "0.0010" ]; then
+      elif [ "$MinDML" == " 0.0010" ]; then
         MinDML=10  
       else
         MinDML=1  
       fi
       MaxFALL=`mediainfo "$input" | grep 'Maximum Frame-Average Light Level' | cut -f 2 -d: | cut -f2 -d" "`
       MaxCLL=`mediainfo "$input" | grep 'Maximum Content Light Level' | cut -f 2 -d: | cut -f2 -d" "`
+      ## Fake HDR10 Metadata if missing on source as it's only needed for backwards hdr10 compatibility but will play fine in DV
+      if [ -z "$MaxDML" ]; then 
+        MaxDML=1000;
+      fi
+      if [ -z "$MinDML" ]; then 
+        MinDML=1;
+      fi
+      if [ -z "$MaxFALL" ]; then 
+        MaxFALL=500;
+      fi
+      if [ -z "$MaxCLL" ]; then 
+        MaxCLL=1000;
+      fi
       FrameCount=`mediainfo --Inform='Video;%FrameCount%' "$input"`
       cat > extra.json <<EOF
 {
