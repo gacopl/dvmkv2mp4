@@ -29,7 +29,9 @@ RUN \
     ffmpeg \
     mediainfo \
     mkvtoolnix && \
-  printf "\n---Cleanup apt cache---\n\n" && \
+  printf "\n---Uninstall unneccassary tools and cleanup apt cache---\n\n" && \
+  apt-get purge -y software-properties-common && \
+  apt-get autoremove -y && \
   rm -rf \
     /var/lib/apt/lists/* \
     /var/tmp/*
