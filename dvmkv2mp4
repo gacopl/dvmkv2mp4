@@ -303,7 +303,9 @@ EOF
 
 
   ### GRAB CHAPTERS
-  mkvextract chapters -s "${output}.asm" > chapters.list
+  if [ -s "${output}.asm" ]; then
+    mkvextract chapters -s "${output}.asm" > chapters.list
+  fi
   
   ### MUX MP4
   mp4string=("$ionc MP4Box -add BL_RPU.hevc:dv-profile=$dv_target")
