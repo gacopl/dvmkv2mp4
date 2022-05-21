@@ -9,7 +9,7 @@ ARG dotnetlink="https://download.visualstudio.microsoft.com/download/pr/546d50b2
 ARG pgs2srtlink="https://github.com/Tentacule/PgsToSrt/releases/download/v1.4.2/PgsToSrt-1.4.2.zip"
 ARG tesseractlink="https://github.com/tesseract-ocr/tessdata.git"
 
-COPY /dvmkv2mp4 /usr/local/bin
+COPY ../dvmkv2mp4 /usr/local/bin
 
 RUN chmod a+x /usr/local/bin/dvmkv2mp4
 
