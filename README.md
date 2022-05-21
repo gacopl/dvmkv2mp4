@@ -85,7 +85,7 @@ dvmkv2mp4 -l und,pol,eng -r -a # will process mkvs found in folder keep only und
 ```
 
 # Docker (experimental)
-The following section assumes that you installed Docker on your machine. For further instrcution to install Docker follow the official site: https://docs.docker.com/get-docker/
+The following section assumes that you installed Docker on your machine. For further instruction to install Docker follow the official site: https://docs.docker.com/get-docker/
 
 ## Build Docker image
 Currently the image works only on x64 Linux. Also note that the final image size will be close to 6 GB which is normal as it includes the Tesseract OCR models.
@@ -106,13 +106,20 @@ docker run -it --rm -v /media/mkvvideos:/convert dvmkv2mp4 -l und,pol,eng -r -a
 This example does the same which is mentioned in setion Usage.
 
 # Roadmap
-- docker image for other systems
+- fix sound delay in output mp4 when source mkv had audio streams with audio delay tag
+- github action to build ready docker images for pulling
+- on MP4Box fail rerun with -no-probe switch which works with stubborn releases
 - helper scripts for Radarr, Sonarr to automatically run on import
 - convert directly from Bluray bdmv mpls file (have it working in alpha state already)
+
+# Shoutouts
+* to @quietvoid for dovi_tool and hdr10plus_tool this whole thing wouldn't be possible without him
+* to @szasza576 for dockerfile
+* to makeMKV and avsForum for inspiration to work it out and put it all together
 
 # Disclaimer
 This is a hobby project created by personal need it could be A LOT better written (I hate those evals) but priority was to make it fast, I code a lot at work so I mostly choose to spend free time with kids and watching movies over this I have a life you know :) 
 
-Therefore I didn't have nor wanted to spend too much time on it so don't judge the quality. I did some features for You though beta was working already fine for me, I wanted to give back something to community
+Therefore I didn't have nor wanted to spend too much time on it so don't judge the code quality. I did some features for You though beta was working already fine for me, I wanted to give back something to community
 
 PRs are welcome :)
