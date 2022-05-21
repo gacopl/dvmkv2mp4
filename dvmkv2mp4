@@ -55,7 +55,7 @@ function cleanup {
   rm RPU.bin extra.json hdr10plus_metadata.json
   rm audio.exports
   rm sub.exports
-  rm *DV-MP4.asm *DV-MP4.*.srt *DV-MP4.sup
+  rm *DV-MP4.asm *DV-MP4.*.srt *DV-MP4.*.sup
   rm tracks.list
   rm chapters.list
   rm BL*hevc
