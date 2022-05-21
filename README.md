@@ -83,8 +83,30 @@ Options:
 
 dvmkv2mp4 -l und,pol,eng -r -a # will process mkvs found in folder keep only undefined, Polish and English tracks, will remove source file once done and will create audio-subs-meta file for future needs
 ```
+
+# Docker (experimental)
+The following section assumes that you installed Docker on your machine. For further instrcution to install Docker follow the official site: https://docs.docker.com/get-docker/
+
+## Build Docker image
+Currently the image works only on x64 Linux. Also note that the final image size will be close to 6 GB which is normal as it includes the Tesseract OCR models.
+
+To build your Docker image run the following command:
+```
+docker build -t dvmkv2mp4  https://github.com/gacopl/dvmkv2mp4.git#main -f docker/Dockerfile
+```
+## Use the Docker image
+The usage is similar to the normal variant but here you need to attach your folder where you would like to convert your files. You can also add the flags at the end of the command.
+
+Example:
+```
+# docker run -it --rm -v <YOUR_FOLDER_PATH>:/convert dvmkv2mp4
+
+docker run -it --rm -v /media/mkvvideos:/convert dvmkv2mp4 -l und,pol,eng -r -a
+```
+This example does the same which is mentioned in setion Usage.
+
 # Roadmap
-- docker version
+- docker image for other systems
 - helper scripts for Radarr, Sonarr to automatically run on import
 - convert directly from Bluray bdmv mpls file (have it working in alpha state already)
 
