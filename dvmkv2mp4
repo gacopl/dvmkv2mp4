@@ -130,6 +130,10 @@ for f in *.mkv;do
       else
         dv_target=8
       fi
+      ### DETIRMINE DV COMPATIBILITY FOR PROFILE 8
+      if [ "$dv_profile" -eq 8 ]; then
+        dv_compatibility=$(mediainfo "$input" | grep "HDR format.*dvhe\." | sed -rn 's/(^|(.* ))([^ ]*) compatible(( .*)|$)/.\3/; T; p; q' | tr '[:upper:]' '[:lower:]')
+      fi
     elif [ ! -z "$hdr10plus" ]; then
       echo "Converting HDR10+ to DV8: \"$input\""
       dv_target=8
@@ -308,7 +312,7 @@ EOF
   fi
   
   ### MUX MP4
-  mp4string=("$ionc MP4Box -add BL_RPU.hevc:dv-profile=$dv_target")
+  mp4string=("$ionc MP4Box -add BL_RPU.hevc:dv-profile=${dv_target}${dv_compatibility}")
   tcount=2
   while read i;do
     stream=`echo "$i" | cut -f1 -d\|`
