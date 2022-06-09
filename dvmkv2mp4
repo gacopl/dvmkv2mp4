@@ -104,7 +104,7 @@ for f in *.mkv;do
   ## AUTODETECT SOURCE TYPE AND CONSTRUCT FFMPEG
   if [ -z "$hdr10plus" ] && [ -z "$dv" ] || [ -f "${input}.dvconverting" ]; then
     echo "Not an HDR10+ nor DV source or already converting"
-    exit -1
+    continue
   else
     touch "${input}.dvconverting"
     if [ ! -z "$dv" ]; then
@@ -112,7 +112,7 @@ for f in *.mkv;do
       if { [ "$dv_profile" -ne 4 ] && [ "$dv_profile" -ne 5 ] && [ "$dv_profile" -ne 7 ] && [ "$dv_profile" -ne 8 ]; } ; then
         info "Unsupported Dolby Vision profile '$dv_profile'; doing nothing"
         rm *.dvconverting
-        exit -1
+        continue
       fi
       echo "Converting DV$dv_profile: \"$input\""
       vscount=`ffprobe -loglevel error -select_streams v -show_entries stream=type:stream=codec_name:stream=index:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep hevc | wc -l`
@@ -297,7 +297,7 @@ EOF
           eval "cp \"$i\" \"`echo "$i" | sed 's/\ DV-MP4//g' | sed \"s/.*\.\(.*\)\.\(s..\)/\$inputbase\.\1\.\2/g\"`\"";
       done
       rm BL.hevc *DV-MP4.asm *DV-MP4.*.srt *DV-MP4.sup ${input}.dvconverting
-      exit -1
+      continue
     fi
   fi
 
