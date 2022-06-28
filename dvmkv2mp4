@@ -68,7 +68,7 @@ function processsubs {
     ### PROCESS SUBS
     inputbase=${input%.mkv}
     # COPY EXISTING SRT
-    for i in "$inputbase"*.srt; do 
+    for i in "$inputbase".*.srt; do 
         eval "cp \"$i\" \"`echo "$i" | sed 's/\ DV\.\|\ HDR10+\.\|HDR\./\./g' | sed 's/\.\(.*\)\.srt/\ DV-MP4\.\1\.srt/g'`\"";
     done
     # CONVERT PGS 2 SRT
@@ -319,6 +319,13 @@ EOF
     mp4string+=($mp4opts)
     tcount=$((tcount+1))
   done <<< "$(cat audio.exports)"
+  if [ -s "sub.exports" ]; then
+    while read i;do
+      subtitle=`echo "$i" | cut -f1 -d\|`
+      mp4opts="-add \"$subtitle\""
+      mp4string+=($mp4opts)
+    done <<< "$(cat sub.exports)"
+  fi
   if [ -s "chapters.list" ]; then
     mp4string+=("-chap chapters.list")
   fi
