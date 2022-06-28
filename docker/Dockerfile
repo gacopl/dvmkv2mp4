@@ -46,7 +46,8 @@ RUN \
 RUN \
   printf "\n---Download hdr10plus_tool---\n\n" && \
   wget -O - ${hdr10plustoollink} | \
-  tar -zx -C /usr/local/bin/
+  tar -zx -C /usr/local/bin/ && \
+  mv /usr/local/bin/dist/* /usr/local/bin/
 
 # MP4BOX
 RUN \
