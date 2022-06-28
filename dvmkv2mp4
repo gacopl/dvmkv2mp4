@@ -68,7 +68,7 @@ function processsubs {
     ### PROCESS SUBS
     inputbase=${input%.mkv}
     # COPY EXISTING SRT
-    for i in "$inputbase".*.srt; do 
+    for i in "$inputbase"*.srt; do 
         eval "cp \"$i\" \"`echo "$i" | sed 's/\ DV\.\|\ HDR10+\.\|HDR\./\./g' | sed 's/\.\(.*\)\.srt/\ DV-MP4\.\1\.srt/g'`\"";
     done
     # CONVERT PGS 2 SRT
