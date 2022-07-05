@@ -29,12 +29,6 @@ RUN \
     ffmpeg \
     mediainfo \
     mkvtoolnix && \
-  printf "\n---Uninstall unneccassary tools and cleanup apt cache---\n\n" && \
-  apt-get purge -y software-properties-common && \
-  apt-get autoremove -y && \
-  rm -rf \
-    /var/lib/apt/lists/* \
-    /var/tmp/*
 
 # DOVI_TOOL
 RUN \
@@ -52,7 +46,6 @@ RUN \
 # MP4BOX
 RUN \
   printf "\n---Download build utils---\n\n" && \
-  apt-get update && \
   apt-get install -y build-essential pkg-config git && \
   apt-get install -y zlib1g-dev && \
   printf "\n---Build mp4box---\n\n" && \
@@ -65,11 +58,7 @@ RUN \
   make install && \
   MP4Box -version && \
   cd ../.. && \
-  printf "\n---Uninstall build utils and cleanup apt cache---\n\n" && \
   rm -Rf mp4box && \
-  apt-get purge -y build-essential pkg-config git && \
-  apt-get purge -y zlib1g-dev && \
-  apt-get autoremove -y && \
   rm -rf \ 
     /var/lib/apt/lists/* \
     /var/tmp/*
@@ -81,7 +70,6 @@ RUN \
   wget -O - ${dotnetlink} | \
   tar -zx -C /opt/dotnet/ && \
   printf "\n---Install tesseract and git---\n\n" && \
-  apt-get update && \
   apt-get install -y libtesseract4 unzip git && \
   printf "\n---Download pgs2srt---\n\n" && \
   mkdir /opt/PgsToSrt && \
@@ -92,7 +80,7 @@ RUN \
   cd /opt/PgsToSrt/net5 && \
   git clone ${tesseractlink} && \
   printf "\n---Uninstall unzip and git and cleanup apt cache---\n\n" && \
-  apt-get purge -y unzip git && \
+  apt-get purge -y software-properties-common build-essential pkg-config git zlib1g-dev unzip git && \
   apt-get autoremove -y && \
   rm -rf \ 
     /var/lib/apt/lists/* \
