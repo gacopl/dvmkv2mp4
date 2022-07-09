@@ -28,7 +28,7 @@ RUN \
   apt-get install -y \
     ffmpeg \
     mediainfo \
-    mkvtoolnix && \
+    mkvtoolnix
 
 # DOVI_TOOL
 RUN \
