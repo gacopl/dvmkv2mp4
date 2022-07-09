@@ -58,10 +58,7 @@ RUN \
   make install && \
   MP4Box -version && \
   cd ../.. && \
-  rm -Rf mp4box && \
-  rm -rf \ 
-    /var/lib/apt/lists/* \
-    /var/tmp/*
+  rm -Rf mp4box
 
 # PGS2SRT
 RUN \
