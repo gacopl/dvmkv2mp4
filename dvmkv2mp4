@@ -319,6 +319,13 @@ EOF
     mp4string+=($mp4opts)
     tcount=$((tcount+1))
   done <<< "$(cat audio.exports)"
+  if [ -s "sub.exports" ]; then
+    while read i;do
+      subtitle=`echo "$i" | cut -f1 -d\|`
+      mp4opts="-add \"$subtitle\""
+      mp4string+=($mp4opts)
+    done <<< "$(cat sub.exports)"
+  fi
   if [ -s "chapters.list" ]; then
     mp4string+=("-chap chapters.list")
   fi
