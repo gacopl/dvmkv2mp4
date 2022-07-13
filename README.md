@@ -71,6 +71,18 @@ wget https://raw.githubusercontent.com/gacopl/dvmkv2mp4/main/dvmkv2mp4
 chmod a+x dvmkv2mp4
 mv dvmkv2mp4 /usr/local/bin/
 ```
+
+To use dvmkv2mp4 in OS X:
+- download and install ionice-MacOS 
+- update dvmkv2mp4 by changing 
+```
+ionc="ionice -c 3"
+```
+to the 
+```
+ionc="ionice --low"
+```
+in two places, row 13 and 85
 # Usage
 ```
 In directory containing Dolby Vision mkv simply run `dvmkv2mp4`it will process any mkvs found in that dir
