@@ -9,8 +9,13 @@ ASM="no"
 REMOVESOURCE="no"
 ## Whether to allow debug by keeping conversion data
 DEBUG="no"
-## Set ionice level to idle to not hammer disks during conversion
-ionc="ionice -c 3"
+## Check OSTYPE and set ionice level to idle to not hammer disks during conversion
+if [[ $OSTYPE == 'darwin'* ]]
+then
+  ionc="ionice --low"
+else
+  ionc="ionice -c 3"
+fi
 
 HEADER="dvmkv2mp4 $VERSION - easily convert Dolby Vision or HDR10+ mkvs to Dolby Vision MP4 
 Created by github.com/gacopl, Released under GPLv3
@@ -81,8 +86,6 @@ function processsubs {
       done <<< "$(cat sub.exports | grep hdmv_pgs)"
     fi
 }
-
-ionc="ionice -c 3"
 
 start=`date +%s`
 echo "$HEADER"
