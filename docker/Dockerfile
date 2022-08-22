@@ -84,7 +84,7 @@ RUN \
     /var/tmp/*
 
 RUN \
-  printf "\n---Create \"convert\" directory for volumne attachment---\n\n" && \
+  printf "\n---Create \"convert\" directory for volume attachment---\n\n" && \
   mkdir /convert
 
 VOLUME ["/convert"]
