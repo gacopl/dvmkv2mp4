@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=0.2.0
+VERSION=0.3.0-dev
 
 ## Which Languages of Audio and Sub tracks to keep in resulting mp4, if no match then all will be kept
 LANGS="ALL"
@@ -10,6 +10,8 @@ REMOVESOURCE="no"
 ## Whether to allow debug by keeping conversion data
 DEBUG="no"
 ## Check OSTYPE and set ionice level to idle to not hammer disks during conversion
+ADDSUBS="no"
+## Whether to add subs to mp4 file default no as some bad subs can break the encoding"
 if [[ $OSTYPE == 'darwin'* ]]
 then
   ionc="ionice --low"
@@ -26,13 +28,14 @@ function print_help {
   echo "-l | --langs          - filter audio and subtitle tracks by lang comma separated if not hit by filter keep all tracks "
   echo "-a | --asm            - create audio-subs-meta mkv file"
   echo "-r | --remove-source  - remove source video after conversion"
+  echo "-s | --add-subs       - add srt subtitles to mp4 as subtitle tracks"
   echo "-d | --debug          - keep intermediary conversion files"
   echo "-v | --version        - print version"
   echo ""
   echo "dvmkv2mp4 -l und,pol,eng -r -a # will process any DV/HDR10+ mkvs found in current dir and keep only Undefined, Polish and English tracks, will remove source file once done and will create audio-subs-meta file for future needs"
 }
 
-TEMP=$(getopt -o al:rdvh --long asm,langs:,remove-source,debug,version,help \
+TEMP=$(getopt -o al:rsdvh --long asm,langs:,remove-source,add-subs,debug,version,help \
               -n 'dvmkv2mp4' -- "$@")
 
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
@@ -46,6 +49,7 @@ while true; do
     -d | --debug ) DEBUG="yes"; shift ;;
     -a | --asm ) ASM="yes"; shift ;;
     -r | --remove-source ) REMOVESOURCE="yes"; shift ;;
+    -s | --add-subs ) ADDSUBS="yes"; shift ;;
     -h | --help ) print_help; shift; exit ;;
     -l | --langs ) LANGS="$2"; shift 2 ;;
     -- ) shift; break ;;
@@ -80,8 +84,14 @@ function processsubs {
     if [ -s "sub.exports" ] && [ "$(cat sub.exports | grep hdmv_pgs)" != "" ]; then
       while read i;do
         stream=`echo "$i" | cut -f1 -d\|`
-        lang=`echo "$i" | cut -f5 -d\|`
+        id=`echo "$i" | cut -f2 -d\|`
+        codec=`echo "$i" | cut -f3 -d\|`
+        orig_codec=`echo "$i" | cut -f4 -d\|`
+        delay=`echo "$i" | cut -f5 -d\|`
+        lang=`echo "$i" | cut -f6 -d\|`
+        title=`echo "$i" | cut -f7 -d\|`
         /opt/dotnet/dotnet /opt/PgsToSrt/net5/PgsToSrt.dll --input "$stream" --output "${stream%.sup}.srt" --tesseractlanguage=$lang
+        echo "${stream%.sup}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> sub.exports
         #docker run --rm -v "`pwd`":/data -e INPUT="/data/$stream" -e OUTPUT="/data/${stream%.sup}.srt" -e LANGUAGE=$lang tentacule/pgstosrt
       done <<< "$(cat sub.exports | grep hdmv_pgs)"
     fi
@@ -180,15 +190,15 @@ EOF
     fi
   fi
   # SELECT LANG TRACKS
-  as=$(ffprobe -loglevel error -select_streams a -show_entries stream=type:stream=codec_name:stream=index:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep $(echo $LANGS | sed 's/,/,\\|,/g') | sed 's/,/\|/g')
+  as=$(ffprobe -loglevel error -select_streams a -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep $(echo $LANGS | sed 's/,/,\\|,/g') | sed 's/,/\|/g')
   if [ "$as" == "" ]; then
-    ffprobe -loglevel error -select_streams a -show_entries stream=type:stream=codec_name:stream=index:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | sed 's/,/\|/g' > tracks.list
+    ffprobe -loglevel error -select_streams a -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | sed 's/,/\|/g' > tracks.list
   else
     echo "$as" > tracks.list
   fi
-  ts=$(ffprobe -loglevel error -select_streams s -show_entries stream=type:stream=codec_name:stream=index:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep $(echo $LANGS | sed 's/,/,\\|,/g') | sed 's/,/\|/g')
+  ts=$(ffprobe -loglevel error -select_streams s -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep $(echo $LANGS | sed 's/,/,\\|,/g') | sed 's/,/\|/g')
   if [ "$ts" == "" ]; then
-    ffprobe -loglevel error -select_streams s -show_entries stream=type:stream=codec_name:stream=index:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | sed 's/,/\|/g' >> tracks.list
+    ffprobe -loglevel error -select_streams s -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | sed 's/,/\|/g' >> tracks.list
   else
     echo "$ts" >> tracks.list
   fi
@@ -196,46 +206,47 @@ EOF
   # FFMPEG PROCESS TRACKS
   while read i;do
     id=`echo "$i" | cut -f1 -d\|`
-    codec=`echo "$i" | cut -f2 -d\|`
-    lang=`echo "$i" | cut -f3 -d\|`
-    title=`echo "$i" | cut -f4 -d\|`
+    orig_codec=`echo "$i" | cut -f2 -d\|`
+    delay=`echo "$i" | cut -f3 -d\|`
+    lang=`echo "$i" | cut -f4 -d\|`
+    title=`echo "$i" | cut -f5 -d\|`
     ffopts=""
-    if [ "$codec" == "truehd" ]; then
+    if [ "$orig_codec" == "truehd" ]; then
       ffopts="-map 0:$id -b:a:0 1024k -c:a:0 eac3 -f eac3 $id.$lang.eac3"
-      echo "$id.$lang.eac3|eac3|$id|$codec|$lang|$title" >> audio.exports
+      echo "$id.$lang.eac3|$id|eac3|$orig_codec|$delay|$lang|$title" >> audio.exports
     fi
-    if [ "$codec" == "eac3" ]; then
+    if [ "$orig_codec" == "eac3" ]; then
       ffopts="-map 0:$id -c:a:0 copy $id.$lang.eac3"
-      echo "$id.$lang.eac3|eac3|$id|$codec|$lang|$title" >> audio.exports
+      echo "$id.$lang.eac3|$id|eac3|$orig_codec|$delay|$lang|$title" >> audio.exports
     fi
-    if [ "$codec" == "dts" ]; then
+    if [ "$orig_codec" == "dts" ]; then
       ffopts="-map 0:$id -b:a:0 1024k -c:a:0 eac3 -f eac3 $id.$lang.eac3"
-      echo "$id.$lang.eac3|eac3|$id|$codec|$lang|$title" >> audio.exports
+      echo "$id.$lang.eac3|$id|eac3|$orig_codec|$delay|$lang|$title" >> audio.exports
     fi
-    if [ "$codec" == "ac3" ]; then
+    if [ "$orig_codec" == "ac3" ]; then
       ffopts="-map 0:$id -c:a:0 copy $id.$lang.ac3"
-      echo "$id.$lang.ac3|ac3|$id|$codec|$lang|$title" >> audio.exports
+      echo "$id.$lang.ac3|$id|ac3|$orig_codec|$delay|$lang|$title" >> audio.exports
     fi
-    if [ "$codec" == "aac" ]; then
+    if [ "$orig_codec" == "aac" ]; then
       ffopts="-map 0:$id -c:a:0 copy $id.$lang.aac"
-      echo "$id.$lang.aac|aac|$id|$codec|$lang|$title" >> audio.exports
+      echo "$id.$lang.aac|$id|aac|$orig_codec|$delay|$lang|$title" >> audio.exports
     fi
-    if [ "$codec" == "mp3" ]; then
+    if [ "$orig_codec" == "mp3" ]; then
       ffopts="-map 0:$id -c:a:0 copy $id.$lang.mp3"
-      echo "$id.$lang.mp3|mp3|$id|$codec|$lang|$title" >> audio.exports
+      echo "$id.$lang.mp3|$id|mp3|$orig_codec|$delay|$lang|$title" >> audio.exports
     fi
-    if [ "$codec" == "ass" ]; then
+    if [ "$orig_codec" == "ass" ]; then
       ffopts="-map 0:$id -c:s:0 copy \"$output.${lang}${id}.ass\" -map 0:$id -c:s:0 srt \"$output.${lang}${id}.srt\""
-      echo "$output.${lang}${id}.ass|$id|ass|$codec|$lang|$title" >> sub.exports
-      echo "$output.${lang}${id}.srt|$id|srt|$codec|$lang|$title" >> sub.exports
+      echo "$output.${lang}${id}.ass|$id|ass|$orig_codec|$delay|$lang|$title" >> sub.exports
+      echo "$output.${lang}${id}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> sub.exports
     fi
-    if [ "$codec" == "srt" ] || [ "$codec" == "subrip" ]; then
+    if [ "$orig_codec" == "srt" ] || [ "$orig_codec" == "subrip" ]; then
       ffopts="-map 0:$id -c:s:0 copy \"$output.${lang}${id}.srt\""
-      echo "$output.${lang}${id}.srt|$id|srt|$codec|$lang|$title" >> sub.exports
+      echo "$output.${lang}${id}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> sub.exports
     fi
-    if [ "$codec" == "hdmv_pgs_subtitle" ]; then
+    if [ "$orig_codec" == "hdmv_pgs_subtitle" ]; then
       ffopts="-map 0:$id -c:s:0 copy \"$output.${lang}${id}.sup\""
-      echo "$output.${lang}${id}.sup|$id|srt|$codec|$lang|$title" >> sub.exports
+      echo "$output.${lang}${id}.sup|$id|hdmv_pgs_subtitles|$orig_codec|$delay|$lang|$title" >> sub.exports
     fi
     ffstring+=($ffopts)
   done <<< "$(cat tracks.list)"
@@ -244,9 +255,6 @@ EOF
     # FFMPEG TRACKS FOR ASM
     while read i;do
       id=`echo "$i" | cut -f1 -d\|`
-      codec=`echo "$i" | cut -f2 -d\|`
-      lang=`echo "$i" | cut -f3 -d\|`
-      title=`echo "$i" | cut -f4 -d\| | sed 's/ /-/g'`
       ffopts="-map 0:$id"
       ffstring+=($ffopts)
     done <<< "$(cat tracks.list)"
@@ -313,15 +321,46 @@ EOF
   tcount=2
   while read i;do
     stream=`echo "$i" | cut -f1 -d\|`
-    codec=`echo "$i" | cut -f2 -d\|`
-    id=`echo "$i" | cut -f3 -d\|`
-    lang=`echo "$i" | cut -f5 -d\|`
-    orig_codec=lang=`echo "$i" | cut -f4 -d\|`
-    title=`echo "$i" | cut -f6 -d\|`
-    mp4opts="-add \"$stream\":sopt:gfreg=ffdmx -lang $tcount=$lang"
+    id=`echo "$i" | cut -f2 -d\|`
+    codec=`echo "$i" | cut -f3 -d\|`
+    orig_codec=`echo "$i" | cut -f4 -d\|`
+    delay=`echo "$i" | cut -f5 -d\|`
+    lang=`echo "$i" | cut -f6 -d\|`
+    title=`echo "$i" | cut -f7 -d\|`
+    mp4opts="-add \"$stream\":sopt:gfreg=ffdmx -lang $tcount=$lang -name $tcount=\"$title\" -delay $tcount=$delay"
     mp4string+=($mp4opts)
     tcount=$((tcount+1))
   done <<< "$(cat audio.exports)"
+  if [ $ADDSUBS == "yes" ]; then
+    while read i;do
+      stream=`echo "$i" | cut -f1 -d\|`
+      id=`echo "$i" | cut -f2 -d\|`
+      codec=`echo "$i" | cut -f3 -d\|`
+      orig_codec=`echo "$i" | cut -f4 -d\|`
+      delay=`echo "$i" | cut -f5 -d\|`
+      lang=`echo "$i" | cut -f6 -d\|`
+      title=`echo "$i" | cut -f7 -d\|`
+      echo $stream
+      echo $codec
+      if [ "$codec" == "srt" ] && [ -s "$stream" ]; then
+        mp4opts="-add \"$stream\":lang=$lang:name=\"$title\" -delay $tcount=$delay"
+        mp4string+=($mp4opts)
+        tcount=$((tcount+1))
+      fi
+    done <<< "$(cat sub.exports)"
+
+    # while read i; do
+    # mp4opts="-add "$i":lang=pol:name='downloaded'"
+    # mp4string+=($mp4opts)
+    # done <<< $(ls *{pl,pl-sync}.srt)
+    # while read i; do
+    # if [ "$i" != "" ]; then
+    # mp4opts="-add "$i":lang=eng:name='downloaded'"
+    # mp4string+=($mp4opts)
+    # fi
+    # done <<< $(ls *{en,en-sync}.srt)
+
+  fi
   if [ -s "chapters.list" ]; then
     mp4string+=("-chap chapters.list")
   fi

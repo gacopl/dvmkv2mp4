@@ -8,11 +8,14 @@ Feuatures:
 - converting from HDR10+ to DV8 mp4
 - verifies HDR10+ metadata before conversion (lots of fake releases out there)
 - converts any truehd, dts etc to high bitrate Dolby Digital Plus, copies without conversion supported tracks like ac3, eac3
+- keeps audio/subtitle track delays in resulting mp4
 - keeps chapters
 - converts PGS subtitiles found to SRT subtitiles with PGSToSRT
 - extracts all SRT/Subrip tracks to SRT files
+- can inject subtitles into mp4 as subtitle tracks
 - can create backup mkv with .asm extension (audio subs meta) that has the original audio (truehd etc) subtitles tracks, chapters but without video to safekeep for future comeback conversions to original mkv and not waste place as you can easily demux the mp4 video and mux it with that mkv to come back to original
 - can filter and leave only desired language tracks
+- MacOS support
 
 # Requirements
 - ffmpeg 4.4
@@ -83,6 +86,7 @@ Options:
 -l | --langs          - filter audio and subtitle tracks by lang comma separated if not hit by filter keep all tracks
 -a | --asm            - create audio-subs-meta mkv file
 -r | --remove-source  - remove source video after conversion
+-s | --add-subs       - add srt subtitles to mp4 as subtitle tracks
 -d | --debug          - keep intermediary conversion files
 -v | --version        - print version
 
@@ -111,7 +115,6 @@ docker run -it --rm -v /media/mkvvideos:/convert dvmkv2mp4 -l und,pol,eng -r -a
 This example does the same which is mentioned in setion Usage.
 
 # Roadmap
-- fix sound delay in output mp4 when source mkv had audio streams with audio delay tag
 - github action to build ready docker images for pulling
 - on MP4Box fail rerun with -no-probe switch which works with stubborn releases
 - helper scripts for Radarr, Sonarr to automatically run on import
