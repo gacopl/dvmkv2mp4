@@ -90,7 +90,7 @@ function processsubs {
         delay=`echo "$i" | cut -f5 -d\|`
         lang=`echo "$i" | cut -f6 -d\|`
         title=`echo "$i" | cut -f7 -d\|`
-        /opt/dotnet/dotnet /opt/PgsToSrt/net5/PgsToSrt.dll --input "$stream" --output "${stream%.sup}.srt" --tesseractlanguage=$lang
+        /opt/dotnet/dotnet /opt/PgsToSrt/net6/PgsToSrt.dll --input "$stream" --output "${stream%.sup}.srt" --tesseractlanguage=$lang
         echo "${stream%.sup}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> sub.exports
         #docker run --rm -v "`pwd`":/data -e INPUT="/data/$stream" -e OUTPUT="/data/${stream%.sup}.srt" -e LANGUAGE=$lang tentacule/pgstosrt
       done <<< "$(cat sub.exports | grep hdmv_pgs)"
