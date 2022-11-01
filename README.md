@@ -53,8 +53,8 @@ make
 sudo make install
 MP4Box -version # MAKE SURE IT SAYS 1.0.1
 # PGS2SRT
-wget https://download.visualstudio.microsoft.com/download/pr/546d50b2-d85c-433f-b13b-b896f1bc1916/17d7bbb674bf67c3d490489b20a437b7/dotnet-runtime-5.0.15-linux-x64.tar.gz
-tar -zxf dotnet-runtime-5.0.15-linux-x64.tar.gz
+wget https://download.visualstudio.microsoft.com/download/pr/48fbc600-8228-424e-aaed-52b7e601c277/c493b8ac4629341f1e5acc4ff515fead/dotnet-runtime-6.0.10-linux-x64.tar.gz
+tar -zxf dotnet-runtime-6.0.10-linux-x64.tar.gz
 sudo mkdir /opt/dotnet
 sudo mv * /opt/dotnet
 cd /opt
@@ -63,7 +63,7 @@ sudo mkdir /opt/PgsToSrt
 cd /opt/PgsToSrt
 sudo wget https://github.com/Tentacule/PgsToSrt/releases/download/v1.4.2/PgsToSrt-1.4.2.zip
 sudo unzip PgsToSrt-1.4.2.zip
-cd net5
+cd net6
 sudo git clone https://github.com/tesseract-ocr/tessdata.git
 ```
 
