@@ -13,13 +13,6 @@ COPY /dvmkv2mp4 /usr/local/bin
 
 RUN chmod a+x /usr/local/bin/dvmkv2mp4
 
-# Install JQ BC
-RUN \
-  apt-get update && \
-  apt-get install -y \
-    jq \
-    bc
-
 # Install MEDIAINFO MKVTOOLNIX FFMPEG WGET
 RUN \
   printf "\n---Install mediainfo mkvtoolnix ffmpeg and wget---\n\n" && \
@@ -35,7 +28,9 @@ RUN \
   apt-get install -y \
     ffmpeg \
     mediainfo \
-    mkvtoolnix
+    mkvtoolnix \
+    jq \
+    bc
 
 # DOVI_TOOL
 RUN \
