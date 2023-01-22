@@ -209,7 +209,15 @@ EOF
     orig_codec=`echo "$i" | cut -f2 -d\|`
     delay=`echo "$i" | cut -f3 -d\|`
     lang=`echo "$i" | cut -f4 -d\|`
-    title=`echo "$i" | cut -f5 -d\|`
+    # cover case of missing lang metadata
+    valid="[a-za-za-z]"
+    if [[ ! $lang =~ $valid ]]; then 
+      lang="und";
+      title=`echo "$i" | cut -f4 -d\|`
+    else
+      title=`echo "$i" | cut -f5 -d\|`
+    fi
+    title="${title//[\"\',\`]/}"
     ffopts=""
     if [ "$orig_codec" == "truehd" ]; then
       ffopts="-map 0:$id -b:a:0 1024k -c:a:0 eac3 -f eac3 $id.$lang.eac3"
