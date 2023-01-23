@@ -23,8 +23,9 @@ Feuatures:
 - dovi_tool
 - hdr10plus_tool
 - mediainfo v21
-- dotnet5 for PGS2SRT conversion
+- dotnet6 for PGS2SRT conversion
 - 3xSize of free space for file you want to convert
+- jq, bc
 
 # Requirements install on Ubuntu 20.04
 ```
@@ -33,7 +34,7 @@ sudo add-apt-repository ppa:savoury1/ffmpeg4
 sudo wget -O /usr/share/keyrings/gpg-pub-moritzbunkus.gpg https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
 echo "deb [arch=amd64 signed-by=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ focal main" | sudo tee -a /etc/apt/sources.list
 wget https://mediaarea.net/repo/deb/repo-mediaarea_1.0-19_all.deb && sudo dpkg -i repo-mediaarea_1.0-19_all.deb && sudo apt-get update
-sudo apt-get install ffmpeg mediainfo mkvtoolnix
+sudo apt-get install ffmpeg mediainfo mkvtoolnix jq bc
 # DOVI_TOOL
 wget https://github.com/quietvoid/dovi_tool/releases/download/1.4.6/dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
 tar -zxf dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz
@@ -78,6 +79,8 @@ mv dvmkv2mp4 /usr/local/bin/
 To use dvmkv2mp4 in OS X:
 - install all required packages as for Ubuntu 20.04
 - install ionice-MacOS
+- install gnu-sed
+- install jq
 
 # Usage
 ```

@@ -15,8 +15,10 @@ ADDSUBS="no"
 if [[ $OSTYPE == 'darwin'* ]]
 then
   ionc="ionice --low"
+  sed="gsed"
 else
   ionc="ionice -c 3"
+  sed="sed"
 fi
 
 HEADER="dvmkv2mp4 $VERSION - easily convert Dolby Vision or HDR10+ mkvs to Dolby Vision MP4 
@@ -78,7 +80,7 @@ function processsubs {
     inputbase=${input%.mkv}
     # COPY EXISTING SRT
     for i in "$inputbase".*.srt; do 
-        eval "cp \"$i\" \"`echo "$i" | sed 's/\ DV\.\|\ HDR10+\.\|HDR\./\./g' | sed 's/\.\(.*\)\.srt/\ DV-MP4\.\1\.srt/g'`\"";
+        eval "cp \"$i\" \"`echo "$i" | $sed 's/\ DV\.\|\ HDR10+\.\|HDR\./\./g' | $sed 's/\.\(.*\)\.srt/\ DV-MP4\.\1\.srt/g'`\"";
     done
     # CONVERT PGS 2 SRT
     if [ -s "sub.exports" ] && [ "$(cat sub.exports | grep hdmv_pgs)" != "" ]; then
@@ -111,7 +113,7 @@ for f in *.mkv;do
   ffendhdr10plus="| $ionc hdr10plus_tool extract -o hdr10plus_metadata.json -"
   dv=$(mediainfo "$input" | grep 'HDR format.*Dolby Vision')
   hdr10plus=$(mediainfo "$input" | grep 'HDR format.*HDR10+')
-  output=`echo "$input" | sed 's/\ DV.mkv\|\ HDR10+.mkv\|\ HDR.mkv/.mkv/g' | sed s/\.mkv/\ DV-MP4\.mkv/g`
+  output=`echo "$input" | $sed 's/\ DV.mkv\|\ HDR10+.mkv\|\ HDR.mkv/.mkv/g' | $sed s/\.mkv/\ DV-MP4\.mkv/g`
   output="${output%.mkv}"
 
   ## AUTODETECT SOURCE TYPE AND CONSTRUCT FFMPEG
@@ -121,7 +123,7 @@ for f in *.mkv;do
   else
     touch "${input}.dvconverting"
     if [ ! -z "$dv" ]; then
-      dv_profile=$(mediainfo "$input" | grep "HDR format.*dvhe\." | sed 's/.*dvhe\.0\(.\).*/\1/')
+      dv_profile=$(mediainfo "$input" | grep "HDR format.*dvhe\." | $sed 's/.*dvhe\.0\(.\).*/\1/')
       if { [ "$dv_profile" -ne 4 ] && [ "$dv_profile" -ne 5 ] && [ "$dv_profile" -ne 7 ] && [ "$dv_profile" -ne 8 ]; } ; then
         info "Unsupported Dolby Vision profile '$dv_profile'; doing nothing"
         rm *.dvconverting
@@ -190,15 +192,15 @@ EOF
     fi
   fi
   # SELECT LANG TRACKS
-  as=$(ffprobe -loglevel error -select_streams a -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep $(echo $LANGS | sed 's/,/,\\|,/g') | sed 's/,/\|/g')
+  as=$(ffprobe -loglevel error -select_streams a -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep $(echo $LANGS | $sed 's/,/,\\|,/g') | $sed 's/,/\|/g')
   if [ "$as" == "" ]; then
-    ffprobe -loglevel error -select_streams a -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | sed 's/,/\|/g' > tracks.list
+    ffprobe -loglevel error -select_streams a -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | $sed 's/,/\|/g' > tracks.list
   else
     echo "$as" > tracks.list
   fi
-  ts=$(ffprobe -loglevel error -select_streams s -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep $(echo $LANGS | sed 's/,/,\\|,/g') | sed 's/,/\|/g')
+  ts=$(ffprobe -loglevel error -select_streams s -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep $(echo $LANGS | $sed 's/,/,\\|,/g') | $sed 's/,/\|/g')
   if [ "$ts" == "" ]; then
-    ffprobe -loglevel error -select_streams s -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | sed 's/,/\|/g' >> tracks.list
+    ffprobe -loglevel error -select_streams s -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | $sed 's/,/\|/g' >> tracks.list
   else
     echo "$ts" >> tracks.list
   fi
@@ -311,9 +313,9 @@ EOF
       echo "HDR10+ Metadata Frames: $MetadataCount VideoFrames: $FrameCount  $MetadataPercent%"
       echo "Preserving extracted subs"
       inputbase=${input%.mkv}
-      dvmp4sub=`echo ${input%.mkv} | sed 's/\ DV\|\ HDR10+//g'`
+      dvmp4sub=`echo ${input%.mkv} | $sed 's/\ DV\|\ HDR10+//g'`
       for i in "$dvmp4sub"\ DV-MP4.*.{srt,sup}; do 
-          eval "cp \"$i\" \"`echo "$i" | sed 's/\ DV-MP4//g' | sed \"s/.*\.\(.*\)\.\(s..\)/\$inputbase\.\1\.\2/g\"`\"";
+          eval "cp \"$i\" \"`echo "$i" | $sed 's/\ DV-MP4//g' | $sed \"s/.*\.\(.*\)\.\(s..\)/\$inputbase\.\1\.\2/g\"`\"";
       done
       rm BL.hevc *DV-MP4.asm *DV-MP4.*.srt *DV-MP4.sup ${input}.dvconverting
       continue
