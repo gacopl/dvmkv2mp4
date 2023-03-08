@@ -111,9 +111,9 @@ The usage is similar to the normal variant but here you need to attach your fold
 
 Example:
 ```
-# docker run -it --rm -v <YOUR_FOLDER_PATH>:/convert dvmkv2mp4
+# docker run -it -u $(id -u):$(id -g) --rm -v <YOUR_FOLDER_PATH>:/convert dvmkv2mp4
 
-docker run -it --rm -v /media/mkvvideos:/convert dvmkv2mp4 -l und,pol,eng -r -a
+docker run -it -u $(id -u):$(id -g) --rm -v /media/mkvvideos:/convert dvmkv2mp4 -l und,pol,eng -r -a
 ```
 This example does the same which is mentioned in setion Usage.
 
