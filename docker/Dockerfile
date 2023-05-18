@@ -1,10 +1,10 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
-ARG mediainforepo="https://mediaarea.net/repo/deb/repo-mediaarea_1.0-19_all.deb"
-ARG dovitoollink="https://github.com/quietvoid/dovi_tool/releases/download/1.4.6/dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz"
-ARG hdr10plustoollink="https://github.com/quietvoid/hdr10plus_tool/releases/download/1.2.2/hdr10plus_tool-1.2.2-x86_64-unknown-linux-musl.tar.gz"
+ARG mediainforepo="https://mediaarea.net/repo/deb/repo-mediaarea_1.0-21_all.deb"
+ARG dovitoollink="https://github.com/quietvoid/dovi_tool/releases/download/2.0.3/dovi_tool-2.0.3-x86_64-unknown-linux-musl.tar.gz"
+ARG hdr10plustoollink="https://github.com/quietvoid/hdr10plus_tool/releases/download/1.6.0/hdr10plus_tool-1.6.0-x86_64-unknown-linux-musl.tar.gz"
 ARG mp4boxlink="https://github.com/gpac/gpac.git"
-ARG mp4boxtag="v1.0.1"
+ARG mp4boxtag="v2.2.1"
 ARG dotnetlink="https://download.visualstudio.microsoft.com/download/pr/48fbc600-8228-424e-aaed-52b7e601c277/c493b8ac4629341f1e5acc4ff515fead/dotnet-runtime-6.0.10-linux-x64.tar.gz"
 ARG pgs2srtlink="https://github.com/Tentacule/PgsToSrt/releases/download/v1.4.2/PgsToSrt-1.4.2.zip"
 ARG tesseractlink="https://github.com/tesseract-ocr/tessdata.git"
@@ -20,7 +20,7 @@ RUN \
   apt-get install -y software-properties-common wget && \
   add-apt-repository ppa:savoury1/ffmpeg4 && \
   wget -O /usr/share/keyrings/gpg-pub-moritzbunkus.gpg https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg && \
-  echo "deb [signed-by=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ focal main" | tee -a /etc/apt/sources.list && \
+  echo "deb [signed-by=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ jammy main" | tee -a /etc/apt/sources.list && \
   wget ${mediainforepo} -O temp.deb && \
   dpkg -i temp.deb && \
   rm temp.deb && \
@@ -42,8 +42,7 @@ RUN \
 RUN \
   printf "\n---Download hdr10plus_tool---\n\n" && \
   wget -O - ${hdr10plustoollink} | \
-  tar -zx -C /usr/local/bin/ && \
-  mv /usr/local/bin/dist/* /usr/local/bin/
+  tar -zx -C /usr/local/bin/
 
 # MP4BOX
 RUN \
@@ -65,9 +64,7 @@ RUN \
 # PGS2SRT
 RUN \
   printf "\n---Download dotnet runtime---\n\n" && \
-  mkdir /opt/dotnet && \
-  wget -O - ${dotnetlink} | \
-  tar -zx -C /opt/dotnet/ && \
+  apt-get update && apt-get install -y dotnet-runtime-6.0 && \
   printf "\n---Install tesseract and git---\n\n" && \
   apt-get install -y libtesseract4 unzip git && \
   printf "\n---Download pgs2srt---\n\n" && \
@@ -81,13 +78,13 @@ RUN \
   printf "\n---Uninstall unzip and git and cleanup apt cache---\n\n" && \
   apt-get purge -y software-properties-common build-essential pkg-config git zlib1g-dev unzip git && \
   apt-get autoremove -y && \
-  rm -rf \ 
+  rm -rf \
     /var/lib/apt/lists/* \
     /var/tmp/*
 
 RUN \
   printf "\n---Create \"convert\" directory for volume attachment---\n\n" && \
-  mkdir /convert
+  mkdir /convert /.gpac && chmod 777 /.gpac
 
 VOLUME ["/convert"]
 
