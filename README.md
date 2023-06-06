@@ -46,7 +46,7 @@ sudo mv dist/hdr10plus_tool /usr/local/bin/
 # MP4BOX
 sudo apt-get install build-essential pkg-config git
 sudo apt-get install zlib1g-dev
-git clone https://github.com/gpac/gpac.git gpac_public
+git clone --depth 1 https://github.com/gpac/gpac.git gpac_public
 cd gpac_public
 git checkout v1.0.1 
 ./configure --static-bin
@@ -65,7 +65,7 @@ cd /opt/PgsToSrt
 sudo wget https://github.com/Tentacule/PgsToSrt/releases/download/v1.4.2/PgsToSrt-1.4.2.zip
 sudo unzip PgsToSrt-1.4.2.zip
 cd net6
-sudo git clone https://github.com/tesseract-ocr/tessdata.git
+sudo git clone --depth 1 https://github.com/tesseract-ocr/tessdata.git
 ```
 
 # Installation
