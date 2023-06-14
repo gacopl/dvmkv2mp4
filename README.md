@@ -46,9 +46,8 @@ sudo mv dist/hdr10plus_tool /usr/local/bin/
 # MP4BOX
 sudo apt-get install build-essential pkg-config git
 sudo apt-get install zlib1g-dev
-git clone --depth 1 https://github.com/gpac/gpac.git gpac_public
+git clone --depth 1 --branch v1.0.1 https://github.com/gpac/gpac.git gpac_public
 cd gpac_public
-git checkout v1.0.1 
 ./configure --static-bin
 make
 sudo make install
