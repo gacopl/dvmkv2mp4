@@ -53,7 +53,7 @@ RUN \
   printf "\n---Build mp4box---\n\n" && \
   mkdir mp4box && \
   cd mp4box && \
-  git clone --branch ${mp4boxtag} ${mp4boxlink} gpac_public && \
+  git clone --depth 1 --branch ${mp4boxtag} ${mp4boxlink} gpac_public && \
   cd gpac_public && \
   ./configure --static-bin && \
   make -j $(nproc) && \
@@ -77,7 +77,7 @@ RUN \
   rm temp.zip && \
   printf "\n---Download tesseract models---\n\n" && \
   cd /opt/PgsToSrt/net6 && \
-  git clone ${tesseractlink} && \
+  git clone --depth 1 ${tesseractlink} && \
   printf "\n---Uninstall unzip and git and cleanup apt cache---\n\n" && \
   apt-get purge -y software-properties-common build-essential pkg-config git zlib1g-dev unzip git && \
   apt-get autoremove -y && \
