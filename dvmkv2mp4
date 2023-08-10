@@ -374,7 +374,7 @@ EOF
   if [ -s "chapters.list" ]; then
     mp4string+=("-chap chapters.list")
   fi
-  mp4string+=("-brand mp42isom -ab dby1 \"$output.mp4\"")
+  mp4string+=("-tmp ./tmp -brand mp42isom -ab dby1 \"$output.mp4\"")
   echo ${mp4string[*]}
   eval ${mp4string[*]}
   if [ $DEBUG != "yes" ]; then
