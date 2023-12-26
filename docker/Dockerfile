@@ -10,10 +10,6 @@ ARG pgs2srtlink="https://github.com/Tentacule/PgsToSrt/releases/download/v1.4.2/
 ARG tesseractlink="https://github.com/tesseract-ocr/tessdata.git"
 ARG ffmpeg6link="https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
 
-COPY /dvmkv2mp4 /usr/local/bin
-
-RUN chmod a+x /usr/local/bin/dvmkv2mp4
-
 # Install MEDIAINFO MKVTOOLNIX FFMPEG WGET
 RUN \
   printf "\n---Install mediainfo mkvtoolnix ffmpeg and wget---\n\n" && \
@@ -94,6 +90,10 @@ RUN \
 RUN \
   printf "\n---Create \"convert\" directory for volume attachment---\n\n" && \
   mkdir /convert
+
+COPY /dvmkv2mp4 /usr/local/bin
+
+RUN chmod a+x /usr/local/bin/dvmkv2mp4
 
 VOLUME ["/convert"]
 
