@@ -1,13 +1,14 @@
 FROM ubuntu:20.04
 
 ARG mediainforepo="https://mediaarea.net/repo/deb/repo-mediaarea_1.0-19_all.deb"
-ARG dovitoollink="https://github.com/quietvoid/dovi_tool/releases/download/1.4.6/dovi_tool-1.4.6-x86_64-unknown-linux-musl.tar.gz"
-ARG hdr10plustoollink="https://github.com/quietvoid/hdr10plus_tool/releases/download/1.2.2/hdr10plus_tool-1.2.2-x86_64-unknown-linux-musl.tar.gz"
+ARG dovitoollink="https://github.com/quietvoid/dovi_tool/releases/download/2.1.0/dovi_tool-2.1.0-x86_64-unknown-linux-musl.tar.gz"
+ARG hdr10plustoollink="https://github.com/quietvoid/hdr10plus_tool/releases/download/1.6.0/hdr10plus_tool-1.6.0-x86_64-unknown-linux-musl.tar.gz"
 ARG mp4boxlink="https://github.com/gpac/gpac.git"
-ARG mp4boxtag="v1.0.1"
+ARG mp4boxtag="v2.2.1"
 ARG dotnetlink="https://download.visualstudio.microsoft.com/download/pr/48fbc600-8228-424e-aaed-52b7e601c277/c493b8ac4629341f1e5acc4ff515fead/dotnet-runtime-6.0.10-linux-x64.tar.gz"
 ARG pgs2srtlink="https://github.com/Tentacule/PgsToSrt/releases/download/v1.4.2/PgsToSrt-1.4.2.zip"
 ARG tesseractlink="https://github.com/tesseract-ocr/tessdata.git"
+ARG ffmpeg6link="https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
 
 COPY /dvmkv2mp4 /usr/local/bin
 
@@ -38,12 +39,17 @@ RUN \
   wget -O - ${dovitoollink} | \
   tar -zx -C /usr/local/bin/
 
+# FFMPEG6
+RUN \
+  printf "\n---Download ffmpeg6---\n\n" && \
+  wget -O - ${ffmpeg6link} | \
+  tar -x -J -C /usr/local/bin/
+
 # HDR10PLUS_TOOL
 RUN \
   printf "\n---Download hdr10plus_tool---\n\n" && \
   wget -O - ${hdr10plustoollink} | \
-  tar -zx -C /usr/local/bin/ && \
-  mv /usr/local/bin/dist/* /usr/local/bin/
+  tar -zx -C /usr/local/bin/
 
 # MP4BOX
 RUN \

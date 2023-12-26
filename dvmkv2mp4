@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=0.3.0-dev
+VERSION=0.5.0-dev
 
 ## Which Languages of Audio and Sub tracks to keep in resulting mp4, if no match then all will be kept
 LANGS="ALL"
@@ -140,6 +140,8 @@ for f in *.mkv;do
       fi
       if [ "$dv_profile" -eq 5 ]; then
         dv_target=5
+      elif [ "$dv_profile" -eq 8 ]; then
+        dv_target=8
       elif [ "$dv_profile" -eq 4 ]; then
         dv_target=4
       else
@@ -327,7 +329,7 @@ EOF
   mkvextract chapters -s "${input}" > chapters.list
   
   ### MUX MP4
-  mp4string=("$ionc MP4Box -add BL_RPU.hevc:dv-profile=$dv_target")
+  mp4string=("$ionc MP4Box -add BL_RPU.hevc:dvp=${dv_target}:hdr=none")
   tcount=2
   while read i;do
     stream=`echo "$i" | cut -f1 -d\|`
@@ -358,18 +360,6 @@ EOF
         tcount=$((tcount+1))
       fi
     done <<< "$(cat sub.exports)"
-
-    # while read i; do
-    # mp4opts="-add "$i":lang=pol:name='downloaded'"
-    # mp4string+=($mp4opts)
-    # done <<< $(ls *{pl,pl-sync}.srt)
-    # while read i; do
-    # if [ "$i" != "" ]; then
-    # mp4opts="-add "$i":lang=eng:name='downloaded'"
-    # mp4string+=($mp4opts)
-    # fi
-    # done <<< $(ls *{en,en-sync}.srt)
-
   fi
   if [ -s "chapters.list" ]; then
     mp4string+=("-chap chapters.list")
