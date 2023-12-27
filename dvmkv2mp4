@@ -28,6 +28,7 @@ Created by github.com/gacopl, Released under GPLv3
 function print_help {
   echo "$HEADER"
   echo "-l | --langs          - filter audio and subtitle tracks by lang comma separated if not hit by filter keep all tracks "
+  echo "-c | --ext-compat     - for extended device compatiblity ALWAYS FAKE target DV profile to be 5 (for APPLE/LG C7,8,9 and more) "
   echo "-a | --asm            - create audio-subs-meta mkv file"
   echo "-r | --remove-source  - remove source video after conversion"
   echo "-s | --add-subs       - add srt subtitles to mp4 as subtitle tracks"
@@ -37,7 +38,7 @@ function print_help {
   echo "dvmkv2mp4 -l und,pol,eng -r -a # will process any DV/HDR10+ mkvs found in current dir and keep only Undefined, Polish and English tracks, will remove source file once done and will create audio-subs-meta file for future needs"
 }
 
-TEMP=$(getopt -o al:rsdvh --long asm,langs:,remove-source,add-subs,debug,version,help \
+TEMP=$(getopt -o acl:rsdvh --long asm,ext-compat,langs:,remove-source,add-subs,debug,version,help \
               -n 'dvmkv2mp4' -- "$@")
 
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
@@ -52,6 +53,7 @@ while true; do
     -a | --asm ) ASM="yes"; shift ;;
     -r | --remove-source ) REMOVESOURCE="yes"; shift ;;
     -s | --add-subs ) ADDSUBS="yes"; shift ;;
+    -c | --ext-compat ) EXT_COMPAT="yes"; shift ;;
     -h | --help ) print_help; shift; exit ;;
     -l | --langs ) LANGS="$2"; shift 2 ;;
     -- ) shift; break ;;
@@ -129,7 +131,6 @@ for f in *.mkv;do
         rm *.dvconverting
         continue
       fi
-      echo "Converting DV$dv_profile: \"$input\""
       vscount=`ffprobe -loglevel error -select_streams v -show_entries stream=type:stream=codec_name:stream=index:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep hevc | wc -l`
       if [ "$dv_profile" -eq 4 ] || [ "$dv_profile" -eq 5 ] || [ "$dv_profile" -eq 8 ];then
         ffstring=("$ffstart5_8")
@@ -147,6 +148,7 @@ for f in *.mkv;do
       else
         dv_target=8
       fi
+      echo "Converting DV$dv_profile to DV$dv_target: \"$input\""
     elif [ ! -z "$hdr10plus" ]; then
       echo "Converting HDR10+ to DV8: \"$input\""
       dv_target=8
@@ -329,6 +331,11 @@ EOF
   mkvextract chapters -s "${input}" > chapters.list
   
   ### MUX MP4
+  if [ $EXT_COMPAT == "yes" ]; then
+    echo "Faking DV$dv_target to DV5 for extended device compatiblity"
+    dv_target=5
+  fi
+  
   mp4string=("$ionc MP4Box -add BL_RPU.hevc:dvp=${dv_target}:hdr=none")
   tcount=2
   while read i;do
