@@ -72,6 +72,7 @@ function cleanup {
   rm chapters.list
   rm BL*hevc
   rm "${input}.dvconverting"
+  rm -rf ./tmp
   if [ $REMOVESOURCE == "yes" ]; then
     rm "${input}"
   fi
@@ -383,10 +384,12 @@ EOF
     cleanup
   else
     rm "${input}.dvconverting"
+    rm -rf ./tmp
   fi 
 done
 end=`date +%s`
 runtime=$((end-start))
 hours=$((runtime / 3600)); minutes=$(( (runtime % 3600) / 60 )); seconds=$(( (runtime % 3600) % 60 )); 
+echo
 echo "Conversions runtime: $hours:$minutes:$seconds (hh:mm:ss)"
 echo
