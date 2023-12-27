@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=0.5.0-dev
+VERSION=v0.5.0-dev
 
 ## Which Languages of Audio and Sub tracks to keep in resulting mp4, if no match then all will be kept
 LANGS="ALL"
@@ -24,6 +24,7 @@ fi
 HEADER="dvmkv2mp4 $VERSION - easily convert Dolby Vision or HDR10+ mkvs to Dolby Vision MP4 
 Created by github.com/gacopl, Released under GPLv3
 "
+created_tag="Created with dvmkv2mp4 $@ ($VERSION)"
 
 function print_help {
   echo "$HEADER"
@@ -45,6 +46,8 @@ if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around '$TEMP': they are essential!
 eval set -- "$TEMP"
+
+
 
 while true; do
   case "$1" in
@@ -114,6 +117,8 @@ for f in *.mkv;do
   ffend7_2="| $ionc dovi_tool -m 2 extract-rpu - -o RPU.bin"
   ffstarthdr10plus="$ionc ffmpeg -i \"$input\" -y -loglevel error -stats -map 0:v:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc BL.hevc -map 0:v:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc -"
   ffendhdr10plus="| $ionc hdr10plus_tool extract -o hdr10plus_metadata.json -"
+  ffprobe_info=$(ffprobe "$input" 2>&1 | grep DOVI | sed s/://g)
+  short_info=$(mediainfo "$input" |awk '/Text #1/{exit}1' | grep -i "^video\|^audio\|format\|commercial\|lang\|title" | cut -f2 -d":" | sed s/,//g | sed s/^Video/\ \|\ Video\ -\ /g | sed s/^Audio/\ \|\ Audio\ -\ /g)
   dv=$(mediainfo "$input" | grep 'HDR format.*Dolby Vision')
   hdr10plus=$(mediainfo "$input" | grep 'HDR format.*HDR10+')
   output=`echo "$input" | $sed 's/\ DV.mkv\|\ HDR10+.mkv\|\ HDR.mkv/.mkv/g' | $sed s/\.mkv/\ DV-MP4\.mkv/g`
@@ -151,9 +156,11 @@ for f in *.mkv;do
       fi
       echo "Converting DV$dv_profile to DV$dv_target: \"$input\""
       echo
+      created_tag+=" | Source - DV$dv_profile $ffprobe_info | $short_info"
     elif [ ! -z "$hdr10plus" ]; then
       echo "Converting HDR10+ to DV8: \"$input\""
       echo
+      created_tag+=" | Source - HDR10+ $ffprobe_info | $short_info"
       dv_target=8
       ffstring=("$ffstarthdr10plus")
       MaxDML=`mediainfo "$input" | grep 'Mastering display luminance' | cut -f 4 -d:`
@@ -377,9 +384,17 @@ EOF
   if [ -s "chapters.list" ]; then
     mp4string+=("-chap chapters.list")
   fi
-  mp4string+=("-tmp ./tmp -brand mp42isom -ab dby1 -new \"$output.mp4\"")
+  mp4string+=("-tmp ./tmp -brand mp42isom -ab dby1 -tags comment=\"${created_tag}\" -new \"$output.mp4\"")
   echo ${mp4string[*]}
   eval ${mp4string[*]}
+  ffprobe_output_info=$(ffprobe "${output}.mp4" 2>&1 | grep DOVI | grep -v comment | sed s/://g)
+  echo "Created with dvmkv2mp4 $@ ($VERSION)" > "${output}.nfo"
+  echo "--------- SOURCE ------------" >> "${output}.nfo"
+  echo $ffprobe_info >> "${output}.nfo"
+  mediainfo "${input}" >> "${output}.nfo"
+  echo "--------- TARGET ------------" >> "${output}.nfo"
+  echo $ffprobe_output_info >> "${output}.nfo"
+  mediainfo "${output}.mp4" >> "${output}.nfo"
   if [ $DEBUG != "yes" ]; then
     cleanup
   else
