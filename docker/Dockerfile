@@ -10,12 +10,11 @@ ARG pgs2srtlink="https://github.com/Tentacule/PgsToSrt/releases/download/v1.4.2/
 ARG tesseractlink="https://github.com/tesseract-ocr/tessdata.git"
 ARG ffmpeg6link="https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
 
-# Install MEDIAINFO MKVTOOLNIX FFMPEG WGET
+# Install MEDIAINFO MKVTOOLNIX WGET
 RUN \
-  printf "\n---Install mediainfo mkvtoolnix ffmpeg and wget---\n\n" && \
+  printf "\n---Install mediainfo mkvtoolnix and wget---\n\n" && \
   apt-get update && \
   apt-get install -y software-properties-common wget && \
-  add-apt-repository ppa:savoury1/ffmpeg4 && \
   wget -O /usr/share/keyrings/gpg-pub-moritzbunkus.gpg https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg && \
   echo "deb [signed-by=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ focal main" | tee -a /etc/apt/sources.list && \
   wget ${mediainforepo} -O temp.deb && \
@@ -23,7 +22,6 @@ RUN \
   rm temp.deb && \
   apt-get update && \
   apt-get install -y \
-    ffmpeg \
     mediainfo \
     mkvtoolnix \
     jq \
