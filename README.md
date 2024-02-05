@@ -98,12 +98,12 @@ dvmkv2mp4 -l und,pol,eng -r -a # will process mkvs found in folder keep only und
 # Docker (experimental)
 The following section assumes that you installed Docker on your machine. For further instruction to install Docker follow the official site: https://docs.docker.com/get-docker/
 
-## Build Docker image
+## Pull Docker image
 Currently the image works only on x64 Linux. Also note that the final image size will be close to 6 GB which is normal as it includes the Tesseract OCR models.
 
-To build your Docker image run the following command:
+To pull the Docker image run the following command:
 ```
-docker build -t dvmkv2mp4  https://github.com/gacopl/dvmkv2mp4.git#main -f docker/Dockerfile
+docker pull ghcr.io/gacopl/dvmkv2mp4:main
 ```
 ## Use the Docker image
 The usage is similar to the normal variant but here you need to attach your folder where you would like to convert your files. You can also add the flags at the end of the command.
