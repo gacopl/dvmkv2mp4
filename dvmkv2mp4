@@ -15,6 +15,10 @@ ADDSUBS="no"
 SRC_FORMAT="mkv"
 ## Default input source container used for conversion
 DST_SUFFIX="DV-MP4"
+## Directory to store created files in, disabled (empty) by default. When specified and TEMP_DIR is not, this will also be used for temporary files.
+DEST_DIR=""
+## Directory to store temporary files in, disabled (empty) by default
+TEMP_DIR=""
 
 if [[ $OSTYPE == 'darwin'* ]]
 then
@@ -39,13 +43,15 @@ function print_help {
   echo "-s | --add-subs       - add srt subtitles to mp4 as subtitle tracks"
   echo "-d | --debug          - keep intermediary conversion files"
   echo "-m | --mp4-source     - enable convert from MP4 source mode instead of MKV"
-  echo "-f | --override-type  - override detected source type to one of dv5,dv7,dv8,hdr10plus
+  echo "-f | --override-type  - override detected source type to one of dv5,dv7,dv8,hdr10plus"
+  echo "--dest-dir            - destination directory (optional)"
+  echo "--temp-dir            - directory for temporary files (optional), will default to --dest-dir or working directory"
   echo "-v | --version        - print version"
   echo ""
   echo "dvmkv2mp4 -l und,pol,eng -r -a # will process any DV/HDR10+ mkvs found in current dir and keep only Undefined, Polish and English tracks, will remove source file once done and will create audio-subs-meta file for future needs"
 }
 
-TEMP=$(getopt -o acl:rsdmf:vh --long asm,ext-compat,langs:,remove-source,add-subs,debug,mp4-source,override-type:,version,help \
+TEMP=$(getopt -o acl:rsdmf:vh --long asm,ext-compat,langs:,remove-source,add-subs,debug,mp4-source,override-type:,version,help,dest-dir:,temp-dir: \
               -n 'dvmkv2mp4' -- "$@")
 
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
@@ -67,6 +73,8 @@ while true; do
     -m | --mp4-source ) SRC_FORMAT="mp4"; shift ;;
     -f | --override-type ) SRC_TYPE="$2"; shift 2 ;;
     -l | --langs ) LANGS="$2"; shift 2 ;;
+    --dest-dir ) DEST_DIR="$2"; shift 2 ;;
+    --temp-dir ) TEMP_DIR="$2"; shift 2 ;;
     -- ) shift; break ;;
     * ) break ;;
   esac
@@ -76,16 +84,16 @@ function cleanup {
   if [ $DEBUG != "yes" ]; then
     while read i;do
       rm "`echo "$i" | cut -f1 -d\|`"
-    done <<< "$(cat audio.exports)"
+    done <<< "$(cat "${TEMP_DIR}audio.exports")"
 
-    rm RPU.bin extra.json hdr10plus_metadata.json
-    rm audio.exports
-    rm sub.exports
-    rm tracks.list
-    rm chapters.list
-    rm BL*hevc
-    rm "${input}.dvconverting"
-    rm -rf ./tmp
+    rm "${TEMP_DIR}RPU.bin" "${TEMP_DIR}extra.json" "${TEMP_DIR}hdr10plus_metadata.json"
+    rm "${TEMP_DIR}audio.exports"
+    rm "${TEMP_DIR}sub.exports"
+    rm "${TEMP_DIR}tracks.list"
+    rm "${TEMP_DIR}chapters.list"
+    rm "${TEMP_DIR}BL"*"hevc"
+    rm "${TEMP_DIR}${input}.dvconverting"
+    #rm -rf ./tmp
 
     if [ $exit_code -eq 0 ]; then
       if [ $REMOVESOURCE == "yes" ]; then
@@ -111,11 +119,11 @@ function cleanup {
         cp "$i" "${inputbase}$(echo "$i" | sed -n 's/.*\(\.[^.]*\.\(srt\|sup\)\)$/\1/p')"
         echo "${inputbase}$(echo "$i" | sed -n 's/.*\(\.[^.]*\.\(srt\|sup\)\)$/\1/p')"
       done
-      rm "${output}.nfo" "${output}.asm" "${output}.*.srt" "${output}.*.sup" "${input}.dvconverting" 
+      rm "${output}.nfo" "${output}.asm" "${output}.*.srt" "${output}.*.sup" "${TEMP_DIR}${input}.dvconverting" 
     fi
   else
-    rm "${input}.dvconverting"
-    rm -rf ./tmp
+    rm "${TEMP_DIR}${input}.dvconverting"
+    #rm -rf ./tmp
   fi 
 }
 
@@ -128,7 +136,7 @@ function processsubs {
       done
     fi
     # CONVERT PGS 2 SRT
-    if [ -s "sub.exports" ] && [ "$(cat sub.exports | grep hdmv_pgs)" != "" ]; then
+    if [ -s "${TEMP_DIR}sub.exports" ] && [ "$(cat "${TEMP_DIR}sub.exports" | grep hdmv_pgs)" != "" ]; then
       while read i;do
         stream=`echo "$i" | cut -f1 -d\|`
         id=`echo "$i" | cut -f2 -d\|`
@@ -138,11 +146,33 @@ function processsubs {
         lang=`echo "$i" | cut -f6 -d\|`
         title=`echo "$i" | cut -f7 -d\|`
         /opt/dotnet/dotnet /opt/PgsToSrt/net6/PgsToSrt.dll --input "$stream" --output "${stream%.sup}.srt" --tesseractlanguage=$lang
-        echo "${stream%.sup}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> sub.exports
+        echo "${stream%.sup}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}sub.exports"
         #docker run --rm -v "`pwd`":/data -e INPUT="/data/$stream" -e OUTPUT="/data/${stream%.sup}.srt" -e LANGUAGE=$lang tentacule/pgstosrt
-      done <<< "$(cat sub.exports | grep hdmv_pgs)"
+      done <<< "$(cat "${TEMP_DIR}sub.exports" | grep hdmv_pgs)"
     fi
 }
+
+# Directory checks
+if [ -n "$DEST_DIR" ]; then
+  # Remove trailing slash if present, then add it so trailing slash is always present
+  DEST_DIR="${DEST_DIR%/}/"
+  if [ ! -d "$DEST_DIR" ]; then
+      echo "ERROR: dest-dir option value '$DEST_DIR' is not a directory"
+      exit 1
+  fi
+else
+  DEST_DIR=""
+fi
+if [ -n "$TEMP_DIR" ]; then
+  # Remove trailing slash if present, then add it so trailing slash is always present
+  TEMP_DIR="${TEMP_DIR%/}/"
+  if [ ! -d "$TEMP_DIR" ]; then
+      echo "ERROR: temp-dir option value '$TEMP_DIR' is not a directory"
+      exit 1
+  fi
+else
+  TEMP_DIR="$DEST_DIR"
+fi
 
 start=`date +%s`
 echo "$HEADER"
@@ -159,32 +189,32 @@ for f in *.${SRC_FORMAT};do
   dv=$(mediainfo "$input" | grep 'HDR format.*Dolby Vision')
   hdr10plus=$(mediainfo "$input" | grep 'HDR format.*HDR10+')
   output=`echo "$input" | $sed "s/\ DV.${SRC_FORMAT}\|\ HDR10+.${SRC_FORMAT}\|\ HDR.${SRC_FORMAT}/.${SRC_FORMAT}/g" | $sed s/\.${SRC_FORMAT}/\ ${DST_SUFFIX}\.${SRC_FORMAT}/g | $sed "s/\ ${DST_SUFFIX} ${DST_SUFFIX}\.${SRC_FORMAT}/\ ${DST_SUFFIX}\.${SRC_FORMAT}/g"`
-  output="${output%.${SRC_FORMAT}}"
+  output="${DEST_DIR}${output%.${SRC_FORMAT}}"
   if [[ "${SRC_FORMAT}" == "mp4" ]]; then
     if [[ $input == *"${DST_SUFFIX}.mp4.mp4" ]]; then
       echo "Input and output would be the same and input already .mp4.mp4 ABORTING!!!"
       continue
     elif [[ $input == *"${DST_SUFFIX}.mp4" ]]; then
-      output=${output}.mp4
+      output="${DEST_DIR}${output}.mp4"
     fi
   fi
-  echo "OUT: $output.mp4"
+  echo "OUT: ${output}.mp4"
   echo ""
 
-  ffstart5_8="$ionc ffmpeg -i \"$input\" -y -loglevel error -stats -map 0:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc BL_RPU.hevc"
+  ffstart5_8="$ionc ffmpeg -i \"$input\" -y -loglevel error -stats -map 0:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc \"${TEMP_DIR}BL_RPU.hevc\""
   ffstart7_1="$ionc ffmpeg -i \"$input\" -y -loglevel error -stats -map 0:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc -"
-  ffstart7_2="$ionc ffmpeg -i \"$input\" -y -loglevel error -stats -map 0:v:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc BL.hevc -map 0:v:1 -c:v copy -vbsf hevc_mp4toannexb -f hevc -"
-  ffend7_1="| $ionc dovi_tool -m 2 convert --discard -"
-  ffend7_2="| $ionc dovi_tool -m 2 extract-rpu - -o RPU.bin"
-  ffstarthdr10plus="$ionc ffmpeg -i \"$input\" -y -loglevel error -stats -map 0:v:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc BL.hevc -map 0:v:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc -"
-  ffendhdr10plus="| $ionc hdr10plus_tool extract -o hdr10plus_metadata.json -"
+  ffstart7_2="$ionc ffmpeg -i \"$input\" -y -loglevel error -stats -map 0:v:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc \"${TEMP_DIR}BL.hevc\" -map 0:v:1 -c:v copy -vbsf hevc_mp4toannexb -f hevc -"
+  ffend7_1="| $ionc dovi_tool -m 2 convert --discard -o \"${TEMP_DIR}BL_RPU.hevc\" -"
+  ffend7_2="| $ionc dovi_tool -m 2 extract-rpu - -o \"${TEMP_DIR}RPU.bin\""
+  ffstarthdr10plus="$ionc ffmpeg -i \"$input\" -y -loglevel error -stats -map 0:v:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc \"${TEMP_DIR}BL.hevc\" -map 0:v:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc -"
+  ffendhdr10plus="| $ionc hdr10plus_tool extract -o \"${TEMP_DIR}hdr10plus_metadata.json\" -"
 
   ## AUTODETECT SOURCE TYPE AND CONSTRUCT FFMPEG
-  if [ -z "$hdr10plus" ] && [ -z "$dv" ] || [ -f "${input}.dvconverting" ]; then
+  if [ -z "$hdr10plus" ] && [ -z "$dv" ] || [ -f "${TEMP_DIR}${input}.dvconverting" ]; then
     echo "Not an HDR10+ nor DV source or already converting"
     continue
   else
-    touch "${input}.dvconverting"
+    touch "${TEMP_DIR}${input}.dvconverting"
     if [ ! -z "$dv" ]; then
       if [[ "$SRC_TYPE" != "" ]]; then
         source_type_msg="Source Type overriden to $SRC_TYPE !!!"
@@ -196,12 +226,12 @@ for f in *.${SRC_FORMAT};do
         if ! [[ $dv_profile =~ ^[0-9]+$ ]]; then
           echo "Could not recognize Dolby Vision Profile in source - ABORTING"
           echo "Please use -f switch to set profile manually (dv5,dv7,dv8.1,dv8.2,dv8.4)"
-          rm *.dvconverting
+          rm "${TEMP_DIR}${input}.dvconverting"
           continue
         fi
         if { [ "$dv_profile" -ne 4 ] && [ "$dv_profile" -ne 5 ] && [ "$dv_profile" -ne 7 ] && [ "$dv_profile" -ne 8 ]; } ; then
           info "Unsupported Dolby Vision profile '$dv_profile'; doing nothing"
-          rm *.dvconverting
+          rm "${TEMP_DIR}${input}.dvconverting"
           continue
         fi
       fi
@@ -257,7 +287,7 @@ for f in *.${SRC_FORMAT};do
         MaxCLL=1000;
       fi
       FrameCount=`mediainfo --Inform='Video;%FrameCount%' "$input"`
-      cat > extra.json <<EOF
+      cat > "${TEMP_DIR}extra.json" <<EOF
 {
 "cm_version": "V29",
 "length": $FrameCount,
@@ -274,15 +304,15 @@ EOF
   # SELECT LANG TRACKS
   as=$(ffprobe -loglevel error -select_streams a -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep $(echo $LANGS | $sed 's/,/\\|,.*,.*,/g' | $sed 's/^/,.*,.*,/') | $sed 's/,/\|/g' )
   if [ "$as" == "" ]; then
-    ffprobe -loglevel error -select_streams a -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | $sed 's/,/\|/g' > tracks.list
+    ffprobe -loglevel error -select_streams a -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | $sed 's/,/\|/g' > "${TEMP_DIR}tracks.list"
   else
-    echo "$as" > tracks.list
+    echo "$as" > "${TEMP_DIR}tracks.list"
   fi
   ts=$(ffprobe -loglevel error -select_streams s -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | grep $(echo $LANGS | $sed 's/,/\\|,.*,.*,/g' | $sed 's/^/,.*,.*,/') | $sed 's/,/\|/g' )
   if [ "$ts" == "" ]; then
-    ffprobe -loglevel error -select_streams s -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | $sed 's/,/\|/g' >> tracks.list
+    ffprobe -loglevel error -select_streams s -show_entries stream=type:stream=codec_name:stream=index:stream=start_pts:stream_tags=language:stream_tags=title -of csv=p=0 "$input" | $sed 's/,/\|/g' >> "${TEMP_DIR}tracks.list"
   else
-    echo "$ts" >> tracks.list
+    echo "$ts" >> "${TEMP_DIR}tracks.list"
   fi
   
   # FFMPEG PROCESS TRACKS
@@ -302,48 +332,48 @@ EOF
     title="${title//[\"\',\`]/}"
     ffopts=""
     if [ "$orig_codec" == "truehd" ]; then
-      ffopts="-map 0:$id -b:a:0 1024k -c:a:0 eac3 -f eac3 $id.$lang.eac3"
-      echo "$id.$lang.eac3|$id|eac3|$orig_codec|$delay|$lang|$title" >> audio.exports
+      ffopts="-map 0:$id -b:a:0 1024k -c:a:0 eac3 -f eac3 \"${TEMP_DIR}$id.$lang.eac3\""
+      echo "${TEMP_DIR}$id.$lang.eac3|$id|eac3|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}audio.exports"
     fi
     if [ "$orig_codec" == "eac3" ]; then
-      ffopts="-map 0:$id -c:a:0 copy $id.$lang.eac3"
-      echo "$id.$lang.eac3|$id|eac3|$orig_codec|$delay|$lang|$title" >> audio.exports
+      ffopts="-map 0:$id -c:a:0 copy \"${TEMP_DIR}$id.$lang.eac3\""
+      echo "${TEMP_DIR}$id.$lang.eac3|$id|eac3|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}audio.exports"
     fi
     if [ "$orig_codec" == "dts" ]; then
-      ffopts="-map 0:$id -b:a:0 1024k -c:a:0 eac3 -f eac3 $id.$lang.eac3"
-      echo "$id.$lang.eac3|$id|eac3|$orig_codec|$delay|$lang|$title" >> audio.exports
+      ffopts="-map 0:$id -b:a:0 1024k -c:a:0 eac3 -f eac3 \"${TEMP_DIR}$id.$lang.eac3\""
+      echo "${TEMP_DIR}$id.$lang.eac3|$id|eac3|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}audio.exports"
     fi
     if [ "$orig_codec" == "ac3" ]; then
-      ffopts="-map 0:$id -c:a:0 copy $id.$lang.ac3"
-      echo "$id.$lang.ac3|$id|ac3|$orig_codec|$delay|$lang|$title" >> audio.exports
+      ffopts="-map 0:$id -c:a:0 copy \"${TEMP_DIR}$id.$lang.ac3\""
+      echo "${TEMP_DIR}$id.$lang.ac3|$id|ac3|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}audio.exports"
     fi
     if [ "$orig_codec" == "aac" ]; then
-      ffopts="-map 0:$id -c:a:0 copy $id.$lang.aac"
-      echo "$id.$lang.aac|$id|aac|$orig_codec|$delay|$lang|$title" >> audio.exports
+      ffopts="-map 0:$id -c:a:0 copy \"${TEMP_DIR}$id.$lang.aac\""
+      echo "${TEMP_DIR}$id.$lang.aac|$id|aac|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}audio.exports"
     fi
     if [ "$orig_codec" == "mp3" ]; then
-      ffopts="-map 0:$id -c:a:0 copy $id.$lang.mp3"
-      echo "$id.$lang.mp3|$id|mp3|$orig_codec|$delay|$lang|$title" >> audio.exports
+      ffopts="-map 0:$id -c:a:0 copy \"${TEMP_DIR}$id.$lang.mp3\""
+      echo "${TEMP_DIR}$id.$lang.mp3|$id|mp3|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}audio.exports"
     fi
     if [ "$orig_codec" == "ass" ]; then
       ffopts="-map 0:$id -c:s:0 copy \"$output.${lang}${id}.ass\" -map 0:$id -c:s:0 srt \"$output.${lang}${id}.srt\""
-      echo "$output.${lang}${id}.ass|$id|ass|$orig_codec|$delay|$lang|$title" >> sub.exports
-      echo "$output.${lang}${id}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> sub.exports
+      echo "$output.${lang}${id}.ass|$id|ass|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}sub.exports"
+      echo "$output.${lang}${id}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}sub.exports"
     fi
     if [ "$orig_codec" == "mov_text" ]; then
       ffopts="-map 0:$id -c:s:0 srt \"$output.${lang}${id}.srt\""
-      echo "$output.${lang}${id}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> sub.exports
+      echo "$output.${lang}${id}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}sub.exports"
     fi
     if [ "$orig_codec" == "srt" ] || [ "$orig_codec" == "subrip" ]; then
       ffopts="-map 0:$id -c:s:0 copy \"$output.${lang}${id}.srt\""
-      echo "$output.${lang}${id}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> sub.exports
+      echo "$output.${lang}${id}.srt|$id|srt|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}sub.exports"
     fi
     if [ "$orig_codec" == "hdmv_pgs_subtitle" ]; then
       ffopts="-map 0:$id -c:s:0 copy \"$output.${lang}${id}.sup\""
-      echo "$output.${lang}${id}.sup|$id|hdmv_pgs_subtitles|$orig_codec|$delay|$lang|$title" >> sub.exports
+      echo "$output.${lang}${id}.sup|$id|hdmv_pgs_subtitles|$orig_codec|$delay|$lang|$title" >> "${TEMP_DIR}sub.exports"
     fi
     ffstring+=($ffopts)
-  done <<< "$(cat tracks.list)"
+  done <<< "$(cat "${TEMP_DIR}tracks.list")"
   
   if [ $ASM == "yes" ]; then
     # FFMPEG TRACKS FOR ASM
@@ -351,7 +381,7 @@ EOF
       id=`echo "$i" | cut -f1 -d\|`
       ffopts="-map 0:$id"
       ffstring+=($ffopts)
-    done <<< "$(cat tracks.list)"
+    done <<< "$(cat "${TEMP_DIR}tracks.list")"
     ffstring+=("-c copy -f matroska \"${output}.asm\"")
   fi
   
@@ -366,8 +396,8 @@ EOF
       ffstring+=("$ffend7_2")
       echo ${ffstring[*]}
       eval ${ffstring[*]}
-      $ionc dovi_tool inject-rpu -i BL.hevc --rpu-in RPU.bin -o BL_RPU.hevc
-      rm BL.hevc RPU.bin
+      $ionc dovi_tool inject-rpu -i "${TEMP_DIR}BL.hevc" --rpu-in "${TEMP_DIR}RPU.bin" -o "${TEMP_DIR}BL_RPU.hevc"
+      rm "${TEMP_DIR}BL.hevc" "${TEMP_DIR}RPU.bin"
     else
       echo ${ffstring[*]}
       eval ${ffstring[*]}
@@ -384,14 +414,14 @@ EOF
     processsubs
 
     ### VERIFY HDR10+ METADATA
-    MetadataCount=`cat hdr10plus_metadata.json | jq -r '.SceneInfo | length'`
+    MetadataCount=`cat "${TEMP_DIR}hdr10plus_metadata.json" | jq -r '.SceneInfo | length'`
     MetadataPercent=`bc <<< "scale=2; $MetadataCount/$FrameCount * 100"`
     MetadataPercent=${MetadataPercent%.*}
     if [ "$MetadataPercent" -gt 95 ]; then 
       echo "Metadata seems ok proceeding"
-      $ionc dovi_tool generate -j extra.json --hdr10plus-json hdr10plus_metadata.json -o RPU.bin
-      $ionc dovi_tool inject-rpu -i BL.hevc --rpu-in RPU.bin -o BL_RPU.hevc
-      rm BL.hevc
+      $ionc dovi_tool generate -j "${TEMP_DIR}extra.json" --hdr10plus-json "${TEMP_DIR}hdr10plus_metadata.json" -o "${TEMP_DIR}RPU.bin"
+      $ionc dovi_tool inject-rpu -i "${TEMP_DIR}BL.hevc" --rpu-in "${TEMP_DIR}RPU.bin" -o "${TEMP_DIR}BL_RPU.hevc"
+      rm "${TEMP_DIR}BL.hevc"
     else 
       echo "Invalid HDR10+ Metadata ABORTING"
       echo "HDR10+ Metadata Frames: $MetadataCount VideoFrames: $FrameCount  $MetadataPercent%"
@@ -405,9 +435,9 @@ EOF
 
   ### GRAB CHAPTERS
   if [[ "$SRC_FORMAT" == "mp4" ]]; then
-    MP4Box -dump-chap-ogg "${input}" && mv "$inputbase".txt chapters.list
+    MP4Box -dump-chap-ogg "${input}" -std > "${TEMP_DIR}chapters.list"
   else
-    mkvextract chapters -s "${input}" > chapters.list
+    mkvextract chapters -s "${input}" > "${TEMP_DIR}chapters.list"
   fi
 
   ### FINAL COMPOSITION
@@ -418,7 +448,7 @@ EOF
     dv_target=5
   fi
   
-  mp4string=("$ionc MP4Box -add BL_RPU.hevc:dvp=${dv_target}:hdr=none")
+  mp4string=("$ionc MP4Box -add \"${TEMP_DIR}BL_RPU.hevc\":dvp=${dv_target}:hdr=none")
   tcount=2
   while read i;do
     stream=`echo "$i" | cut -f1 -d\|`
@@ -431,7 +461,7 @@ EOF
     mp4opts="-add \"$stream\":sopt:gfreg=ffdmx -lang $tcount=$lang -name $tcount=\"$title\" -delay $tcount=$delay"
     mp4string+=($mp4opts)
     tcount=$((tcount+1))
-  done <<< "$(cat audio.exports)"
+  done <<< "$(cat "${TEMP_DIR}audio.exports")"
   
   if [ $ADDSUBS == "yes" ]; then
     echo "Below subtitles will be added to output file"
@@ -449,17 +479,17 @@ EOF
         mp4string+=($mp4opts)
         tcount=$((tcount+1))
       fi
-    done <<< "$(cat sub.exports)"
+    done <<< "$(cat "${TEMP_DIR}sub.exports")"
   fi
 
-  if [ -s "chapters.list" ]; then
-    mp4string+=("-chap chapters.list")
+  if [ -s "${TEMP_DIR}chapters.list" ]; then
+    mp4string+=("-chap \"${TEMP_DIR}chapters.list\"")
   fi
 
   echo ""
   echo "Muxing to output file"
   echo ""
-  mp4string+=("-tmp ./tmp -brand mp42isom -ab dby1 -tags comment=\"${created_tag}\" -new \"$output.mp4\"")
+  mp4string+=("-tmp \"${TEMP_DIR}\" -brand mp42isom -ab dby1 -tags comment=\"${created_tag}\" -new \"$output.mp4\"")
   echo ${mp4string[*]}
   eval ${mp4string[*]}
   exit_code=$?

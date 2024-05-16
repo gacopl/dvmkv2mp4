@@ -42,6 +42,8 @@ Options:
 -d | --debug          - keep intermediary conversion files
 -m | --mp4-source     - enable convert from MP4 source mode instead of MKV
 -f | --override-type  - override detected source type to one of dv5,dv7,dv8,hdr10plus in case metadata is broken in source file
+--dest-dir            - destination directory (optional)
+--temp-dir            - directory for temporary files (optional), will default to --dest-dir or working directory
 
 Examples:
 
