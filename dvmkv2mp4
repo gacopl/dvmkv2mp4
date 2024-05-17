@@ -17,8 +17,9 @@ SRC_FORMAT="mkv"
 DST_SUFFIX="DV-MP4"
 ## Directory to store created files in, disabled (empty) by default. When specified and TEMP_DIR is not, this will also be used for temporary files.
 DEST_DIR=""
-## Directory to store temporary files in, disabled (empty) by default
+## Directory to store temporary files in. Defaults to current directory. Script will create a 'tmp' subfolder in this directory for its temporary files.
 TEMP_DIR=""
+
 
 if [[ $OSTYPE == 'darwin'* ]]
 then
@@ -45,7 +46,7 @@ function print_help {
   echo "-m | --mp4-source     - enable convert from MP4 source mode instead of MKV"
   echo "-f | --override-type  - override detected source type to one of dv5,dv7,dv8,hdr10plus"
   echo "--dest-dir            - destination directory (optional)"
-  echo "--temp-dir            - directory for temporary files (optional), will default to --dest-dir or working directory"
+  echo "--temp-dir            - directory for temporary files (optional), defaults to --dest-dir or working directory. Creates a 'tmp' subfolder."
   echo "-v | --version        - print version"
   echo ""
   echo "dvmkv2mp4 -l und,pol,eng -r -a # will process any DV/HDR10+ mkvs found in current dir and keep only Undefined, Polish and English tracks, will remove source file once done and will create audio-subs-meta file for future needs"
@@ -93,7 +94,6 @@ function cleanup {
     rm "${TEMP_DIR}chapters.list"
     rm "${TEMP_DIR}BL"*"hevc"
     rm "${TEMP_DIR}${input}.dvconverting"
-    rm -rf "${TEMP_DIR}mp4boxtmp"
 
     if [ $exit_code -eq 0 ]; then
       if [ $REMOVESOURCE == "yes" ]; then
@@ -123,7 +123,6 @@ function cleanup {
     fi
   else
     rm "${TEMP_DIR}${input}.dvconverting"
-    rm -rf "${TEMP_DIR}mp4boxtmp"
   fi 
 }
 
@@ -163,15 +162,24 @@ if [ -n "$DEST_DIR" ]; then
 else
   DEST_DIR=""
 fi
+
+TEMP_DIR_SUBFOLDER='tmp'
 if [ -n "$TEMP_DIR" ]; then
   # Remove trailing slash if present, then add it so trailing slash is always present
-  TEMP_DIR="${TEMP_DIR%/}/"
-  if [ ! -d "$TEMP_DIR" ]; then
-      echo "ERROR: temp-dir option value '$TEMP_DIR' is not a directory"
-      exit 1
-  fi
+  TEMP_DIR="${TEMP_DIR%/}/${TEMP_DIR_SUBFOLDER}/"
+elif [ -n "$DEST_DIR" ]; then
+  TEMP_DIR="${DEST_DIR}${TEMP_DIR_SUBFOLDER}/"
 else
-  TEMP_DIR="$DEST_DIR"
+  TEMP_DIR="./${TEMP_DIR_SUBFOLDER}/"
+fi
+TEMP_DIR_CREATED=''
+if [ ! -d "$TEMP_DIR" ]; then
+  mkdir "$TEMP_DIR"
+  if [ $? -ne 0 ]; then
+    echo "ERROR: unable to create temporary directory '$TEMP_DIR'"
+    exit 1
+  fi
+  TEMP_DIR_CREATED='yes'
 fi
 
 start=`date +%s`
@@ -199,6 +207,7 @@ for f in *.${SRC_FORMAT};do
     fi
   fi
   echo "OUT: ${output}.mp4"
+  echo "TEMP: $TEMP_DIR"
   echo ""
 
   ffstart5_8="$ionc ffmpeg -i \"$input\" -y -loglevel error -stats -map 0:0 -c:v copy -vbsf hevc_mp4toannexb -f hevc \"${TEMP_DIR}BL_RPU.hevc\""
@@ -489,7 +498,7 @@ EOF
   echo ""
   echo "Muxing to output file"
   echo ""
-  mp4string+=("-tmp \"${TEMP_DIR}mp4boxtmp\" -brand mp42isom -ab dby1 -tags comment=\"${created_tag}\" -new \"$output.mp4\"")
+  mp4string+=("-tmp \"${TEMP_DIR}\" -brand mp42isom -ab dby1 -tags comment=\"${created_tag}\" -new \"$output.mp4\"")
   echo ${mp4string[*]}
   eval ${mp4string[*]}
   exit_code=$?
@@ -509,6 +518,11 @@ EOF
   coment_tag=""
   echo "-------------"
 done
+
+if [ "$TEMP_DIR_CREATED" = 'yes' ]; then
+  rmdir "${TEMP_DIR}"
+fi
+
 end=`date +%s`
 runtime=$((end-start))
 hours=$((runtime / 3600)); minutes=$(( (runtime % 3600) / 60 )); seconds=$(( (runtime % 3600) % 60 )); 
