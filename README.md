@@ -44,7 +44,6 @@ Options:
 -f | --override-type  - override detected source type to one of dv5,dv7,dv8,hdr10plus in case metadata is broken in source file
 --dest-dir            - destination directory (optional)
 --temp-dir            - directory for temporary files (optional), defaults to --dest-dir or working directory. Creates a 'tmp' subfolder.
---lock-in-temp        - create lock file in temporary directory instead of working directory
 
 Examples:
 

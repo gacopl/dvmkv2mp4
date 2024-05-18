@@ -17,10 +17,8 @@ SRC_FORMAT="mkv"
 DST_SUFFIX="DV-MP4"
 ## Directory to store created files in, disabled (empty) by default. When specified and TEMP_DIR is not, this will also be used for temporary files.
 DEST_DIR=""
-## Directory to store temporary files in. Defaults to current directory. Script will create a 'tmp' subfolder in this directory for its temporary files.
+## Directory to store temporary files in. Defaults to current directory. Script will create a subfolder in this directory for its temporary files.
 TEMP_DIR=""
-## Wether to create the lock file in the temporary directory. This can be useful when the source directory is read-only.
-LOCK_IN_TEMP='no'
 
 if [[ $OSTYPE == 'darwin'* ]]
 then
@@ -47,14 +45,13 @@ function print_help {
   echo "-m | --mp4-source     - enable convert from MP4 source mode instead of MKV"
   echo "-f | --override-type  - override detected source type to one of dv5,dv7,dv8,hdr10plus"
   echo "--dest-dir            - destination directory (optional)"
-  echo "--temp-dir            - directory for temporary files (optional), defaults to --dest-dir or working directory. Creates a 'tmp' subfolder."
-  echo "--lock-in-temp        - create lock file in temporary directory instead of working directory"
+  echo "--temp-dir            - directory for temporary files (optional), defaults to --dest-dir or working directory"
   echo "-v | --version        - print version"
   echo ""
   echo "dvmkv2mp4 -l und,pol,eng -r -a # will process any DV/HDR10+ mkvs found in current dir and keep only Undefined, Polish and English tracks, will remove source file once done and will create audio-subs-meta file for future needs"
 }
 
-TEMP=$(getopt -o acl:rsdmf:vh --long asm,ext-compat,langs:,remove-source,add-subs,debug,mp4-source,override-type:,version,help,dest-dir:,temp-dir:,lock-in-temp \
+TEMP=$(getopt -o acl:rsdmf:vh --long asm,ext-compat,langs:,remove-source,add-subs,debug,mp4-source,override-type:,version,help,dest-dir:,temp-dir: \
               -n 'dvmkv2mp4' -- "$@")
 
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
@@ -78,7 +75,6 @@ while true; do
     -l | --langs ) LANGS="$2"; shift 2 ;;
     --dest-dir ) DEST_DIR="$2"; shift 2 ;;
     --temp-dir ) TEMP_DIR="$2"; shift 2 ;;
-    --lock-in-temp ) LOCK_IN_TEMP='yes'; shift ;;
     -- ) shift; break ;;
     * ) break ;;
   esac
@@ -123,6 +119,9 @@ function cleanup {
       done
       rm "${output}.nfo" "${output}.asm" "${output}.*.srt" "${output}.*.sup"
     fi
+
+    removelocktemp
+
   fi 
 }
 
@@ -151,6 +150,13 @@ function processsubs {
     fi
 }
 
+function removelocktemp () {
+  rm "${LOCKFILE}"
+  if [ "$TEMP_DIR_CREATED" = 'yes' ]; then
+    rmdir "${TEMP_DIR}"
+  fi
+}
+
 # Directory checks
 if [ -n "$DEST_DIR" ]; then
   # Remove trailing slash if present, then add it so trailing slash is always present
@@ -163,35 +169,19 @@ else
   DEST_DIR=""
 fi
 
-TEMP_DIR_SUBFOLDER='tmp'
 if [ -n "$TEMP_DIR" ]; then
+  # Store original TEM_DIR value in TEMP_DIR_BASE so it can be reused for every file
   # Remove trailing slash if present, then add it so trailing slash is always present
-  TEMP_DIR="${TEMP_DIR%/}/${TEMP_DIR_SUBFOLDER}/"
-elif [ -n "$DEST_DIR" ]; then
-  TEMP_DIR="${DEST_DIR}${TEMP_DIR_SUBFOLDER}/"
-else
-  TEMP_DIR="./${TEMP_DIR_SUBFOLDER}/"
-fi
-TEMP_DIR_CREATED=''
-if [ ! -d "$TEMP_DIR" ]; then
-  mkdir "$TEMP_DIR"
-  if [ $? -ne 0 ]; then
-    echo "ERROR: unable to create temporary directory '$TEMP_DIR'"
-    exit 1
+  TEMP_DIR_BASE="${TEMP_DIR%/}/"
+  if [ ! -d "$TEMP_DIR_BASE" ]; then
+      echo "ERROR: temp-dir option value '$TEMP_DIR_BASE' is not a directory"
+      exit 1
   fi
-  TEMP_DIR_CREATED='yes'
-fi
-
-if [ "$LOCK_IN_TEMP" = 'yes' ]; then
-  LOCKFILE="${TEMP_DIR}.dvconverting"
+elif [ -n "$DEST_DIR" ]; then
+  TEMP_DIR_BASE="${DEST_DIR}"
 else
-  LOCKFILE=".dvconverting"
+  TEMP_DIR_BASE=""
 fi
-if [ -f "${LOCKFILE}" ]; then
-  echo "Already converting"
-  exit 1
-fi
-touch "${LOCKFILE}"
 
 start=`date +%s`
 echo "$HEADER"
@@ -217,6 +207,30 @@ for f in *.${SRC_FORMAT};do
       output="${DEST_DIR}${output}.mp4"
     fi
   fi
+
+  # use TEMP_DIR_BASE because TEMP_DIR can already contain a filename from a previous file
+  TEMP_DIR="${TEMP_DIR_BASE}${input}.tmp/"
+  TEMP_DIR_CREATED=''
+  if [ ! -d "$TEMP_DIR" ]; then
+    mkdir "$TEMP_DIR"
+    if [ $? -ne 0 ]; then
+      echo "ERROR: unable to create temporary directory '$TEMP_DIR'"
+      continue
+    fi
+    TEMP_DIR_CREATED='yes'
+  fi
+
+  LOCKFILE="${TEMP_DIR}.dvconverting"
+  if [ -f "${LOCKFILE}" ]; then
+    echo "Already converting"
+    continue
+  fi
+  touch "${LOCKFILE}"
+  if [ $? -ne 0 ]; then
+    echo "ERROR: unable to create lock file '$LOCKFILE'"
+    continue
+  fi
+
   echo "OUT: ${output}.mp4"
   echo "TEMP: $TEMP_DIR"
   echo ""
@@ -232,6 +246,7 @@ for f in *.${SRC_FORMAT};do
   ## AUTODETECT SOURCE TYPE AND CONSTRUCT FFMPEG
   if [ -z "$hdr10plus" ] && [ -z "$dv" ]; then
     echo "Not an HDR10+ nor DV source"
+    removelocktemp
     continue
   else
     if [ ! -z "$dv" ]; then
@@ -245,10 +260,12 @@ for f in *.${SRC_FORMAT};do
         if ! [[ $dv_profile =~ ^[0-9]+$ ]]; then
           echo "Could not recognize Dolby Vision Profile in source - ABORTING"
           echo "Please use -f switch to set profile manually (dv5,dv7,dv8.1,dv8.2,dv8.4)"
+          removelocktemp
           continue
         fi
         if { [ "$dv_profile" -ne 4 ] && [ "$dv_profile" -ne 5 ] && [ "$dv_profile" -ne 7 ] && [ "$dv_profile" -ne 8 ]; } ; then
           info "Unsupported Dolby Vision profile '$dv_profile'; doing nothing"
+          removelocktemp
           continue
         fi
       fi
@@ -526,12 +543,6 @@ EOF
   coment_tag=""
   echo "-------------"
 done
-
-rm "${LOCKFILE}"
-
-if [ "$TEMP_DIR_CREATED" = 'yes' ]; then
-  rmdir "${TEMP_DIR}"
-fi
 
 end=`date +%s`
 runtime=$((end-start))
