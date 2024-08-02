@@ -327,7 +327,7 @@ EOF
   mkvextract chapters -s "${input}" > chapters.list
   
   ### MUX MP4
-  mp4string=("$ionc MP4Box -add BL_RPU.hevc:dv-profile=$dv_target")
+  mp4string=("$ionc MP4Box -add BL_RPU.hevc:dv-profile=$dv_target.hdr10")
   tcount=2
   while read i;do
     stream=`echo "$i" | cut -f1 -d\|`
