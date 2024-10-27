@@ -148,14 +148,40 @@ MP4Box -version
 ```
 
 ## .NET6 for PGS2SRT
-Go to Microsoft website to download the last .NET 6 installer : https://dotnet.microsoft.com/fr-fr/download/dotnet/6.0
-In the macOS line, if your mac is a M1, M2, etc.. choose `Arm64`, if not choose `x64`.
-Install the downloaded package to your mac.
+Go to Microsoft website to download the last .NET 6 runtime binaries : https://dotnet.microsoft.com/fr-fr/download/dotnet/6.0
+If your mac is a M1, M2, etc.. choose `Arm64`, if not choose `x64`.
+**Only binaries are needed do not download the full sdk**.
+Then create a `dotnet` folder inside your `/opt` folder :
+```
+cd /opt
+sudo mkdir dotnet
+```
+Then copy the binaries iside the .net runtime folder that you extracted from the tar.gz into the /opt/dotnet folder :
+```
+# Replace the folder in Downloads by the one you extracted
+sudo mv ~/Downloads/dotnet-runtime-6.0.35-osx-x64/* /opt/dotnet
+```
 
+Create a PgsToSrt folder in /opt and then a net6 folder inside
+```
+cd /opt
+sudo mkdir PgsToSrt
+cd PgsToSrt
+sudo mkdir net6
+```
 Download the PGS2SRT package : https://github.com/Tentacule/PgsToSrt/releases/tag/v1.4.5
-Then navigate in your terminal to be in the extracted folder of the package and run :
+Extract the package and then navigate in your terminal to be in the extracted folder of the package :
+```
+# Replace the folder in Downloads by the one you extracted
+cd ~/Downloads/PgsToStr-1.4.5
+```
+Clone the tessdata inside the folder
 ```
 sudo git clone --depth 1 https://github.com/tesseract-ocr/tessdata.git
+```
+And then copy all the data in the folder to `/opt/PgsToSrt/net6`
+```
+sudo cp * /opt/PgsToSrt/net6
 ```
 
 ## IONICE-MACOS
