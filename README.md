@@ -75,11 +75,122 @@ chmod a+x dvmkv2mp4
 mv dvmkv2mp4 /usr/local/bin/
 ```
 
-To use dvmkv2mp4 in OS X:
-- install all required packages as for Ubuntu 20.04
-- install ionice-MacOS
-- install gnu-sed
-- install jq
+# Requirements install on MacOS
+Multiple installations are modifications are needed before being able to run the tool on MacOS.
+
+## FFMPEG@4
+In order to be compatible with other modules of the project you need to install the version 4.X.X of ffmpeg and not the last one.
+You can do this by running the command :
+```
+brew install ffmpeg@4
+```
+In order to use ffmpeg command or use `ffmpeg@4` when using `ffmpeg` command (instead of newer version maybe installed on your mac) you need to run the following commands.
+If you are on macOS Catalina and later :
+```
+# Add ffmpeg@4 to PATH using redirection
+echo 'export PATH="/usr/local/opt/ffmpeg@4/bin:$PATH"' >> ~/.zshrc
+```
+If you are on older macOS versions :
+```
+# Add ffmpeg@4 to PATH using redirection
+echo 'export PATH="/usr/local/opt/ffmpeg@4/bin:$PATH"' >> ~/.bash_profile
+```
+Check your ffmpeg version :
+```
+ffmpeg -version
+```
+You should be in 4.X.X
+
+## Multiple modules installations (MEDIAINFO, JQ, DOVI_TOOL)
+```
+# MEDIAINFO
+brew install mediainfo
+# JQ
+brew install jq
+# DOVI_TOOL
+brew install dovi_tool
+```
+
+## HDR10PLUS_TOOL
+Go to the last release to this date and download the universal-macOS zip (here it's 1.6.1) : https://github.com/quietvoid/hdr10plus_tool/releases/tag/1.6.1
+There might be new releases when you will read this and they might work but 1.6.1 works for sure.
+Unzip the file to extract the executable file that should be named : `hdr10plus_tool`
+Make sure your file is executable and move it to your `/usr/local/bin`:
+```
+sudo cp ~/Downloads/hdr10plus_tool /usr/local/bin
+chmod a+x /usr/local/bin/hdr10plus_tool
+```
+
+## MP4BOX
+MP4BOX is probably the most trickiest module to install, several steps are needed :
+
+### XQuartz / X11
+You need first to install XQuartz in order to be compatible with X11.
+Go to https://www.xquartz.org/ to download and install XQuartz for your Mac.
+
+### GPAC / MP4BOX
+As mentioned before only v1.0.1 is compatible with the tool.
+To install v1.0.1 please execute the following steps :
+```
+# Clone the v1.0.1 version of the module
+git clone --depth 1 --branch v1.0.1 https://github.com/gpac/gpac.git gpac_public
+
+# Go into the folder
+cd gpac_public
+
+# Build and install the module to your mac
+./configure --static-bin
+make
+sudo make install
+
+# When the install is successfull you can check the version and make sure it's 1.0.1
+MP4Box -version
+```
+
+## .NET6 for PGS2SRT
+Go to Microsoft website to download the last .NET 6 installer : https://dotnet.microsoft.com/fr-fr/download/dotnet/6.0
+In the macOS line, if your mac is a M1, M2, etc.. choose `Arm64`, if not choose `x64`.
+Install the downloaded package to your mac.
+
+Download the PGS2SRT package : https://github.com/Tentacule/PgsToSrt/releases/tag/v1.4.5
+Then navigate in your terminal to be in the extracted folder of the package and run :
+```
+sudo git clone --depth 1 https://github.com/tesseract-ocr/tessdata.git
+```
+
+## IONICE-MACOS
+Download the release zip package :https://github.com/DrHyde/ionice-MacOS/releases/tag/release-1
+And extract it.
+In order to make it work you need to **modify the Makefile** in the folder.
+Replace first line with :
+```
+PREFIX=/usr/local
+```
+And last two lines with :
+```
+clean:
+	rm -f ionice ionice.1
+```
+Now you can run the following command in the ionice folder to install the module :
+```
+sudo make install
+```
+
+## GNU-SED
+```
+# Install package
+brew install gnu-sed
+# Make it executable as sed
+PATH="$HOMEBREW_PREFIX/opt/gnu-sed/libexec/gnubin:$PATH"
+```
+
+# Installation MacOS (same as Linux)
+Download dvmkv2mp4 make it executable and move
+```
+wget https://raw.githubusercontent.com/gacopl/dvmkv2mp4/main/dvmkv2mp4
+chmod a+x dvmkv2mp4
+mv dvmkv2mp4 /usr/local/bin/
+```
 
 # Usage
 ```
