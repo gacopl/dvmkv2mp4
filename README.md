@@ -20,6 +20,7 @@ Converts any Dolby Vision (Profile 5, 7 Single Track, 7 Dual Track, 8) / HDR10+ 
 
 # Requirements
 - ffmpeg 6.0
+- ffprobe 6.x
 - **mp4box 2.2.1**
 - dovi_tool 2.1.0
 - hdr10plus_tool 1.6.0

@@ -481,8 +481,11 @@ EOF
     echo
     dv_target=5
   fi
-  
-  mp4string=("$ionc MP4Box -add \"${TEMP_DIR}BL_RPU.hevc\":dvp=${dv_target}:hdr=none")
+
+  fps=$(ffprobe -v error -select_streams v -show_entries stream=avg_frame_rate -of csv=p=0 "$input" | awk -F '/' '{if ($2) {print $1/$2} else {print $1}}')
+  echo "Detected framerate: $fps"
+
+  mp4string=("$ionc MP4Box -add \"${TEMP_DIR}BL_RPU.hevc\":dvp=${dv_target}:fps=${fps}:hdr=none")
   tcount=2
   while read i;do
     stream=`echo "$i" | cut -f1 -d\|`
